@@ -25,13 +25,27 @@ done, sign-in will fail even though the app itself is running.
 
 ### 1. Create the realm and client in Keycloak
 
-1. `docker compose up`, then open http://localhost:8090 and sign in with `admin` / `admin`.
-2. Top-left realm dropdown → **Create realm** → name it `find-my-game-parts`.
-3. Left nav → **Clients** → **Create client**:
+1. `docker compose up`.
+2. **If you hit a Keycloak error saying the request must use HTTPS** when
+   opening the admin console: Keycloak's realms default to requiring HTTPS
+   for anything they classify as an "external" request, and on some
+   networks (a corporate VPN/proxy that rewrites the apparent source IP is
+   the usual cause) it misclassifies a plain `localhost` request as
+   external. Fix it once per realm from inside the container, where the
+   request stays genuinely local:
+   ```bash
+   docker compose exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+     --server http://localhost:8080 --realm master --user admin --password admin
+   docker compose exec keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+   ```
+   Repeat the second command with `realms/find-my-game-parts` after you create that realm in step 3 below, if you hit the same error there.
+3. Open http://localhost:8090 and sign in with `admin` / `admin`.
+4. Top-left realm dropdown → **Create realm** → name it `find-my-game-parts`.
+5. Left nav → **Clients** → **Create client**:
    - Client ID: `find-my-game-parts` (matches `KEYCLOAK_CLIENT_ID` in `.env.example`)
    - Client authentication: **On** (a confidential client, so it gets a client secret)
    - Valid redirect URIs: `http://localhost:3030/api/auth/callback/keycloak`
-4. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
+6. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
 
 ### 2. Google as an identity provider
 
