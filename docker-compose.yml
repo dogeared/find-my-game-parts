@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/find_my_game_parts
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me}
+      KEYCLOAK_ISSUER: http://keycloak:8080/realms/find-my-game-parts
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-find-my-game-parts}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      BGG_API_BASE: https://boardgamegeek.com/xmlapi2
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - db
+      - keycloak
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: find_my_game_parts
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+
+  # Local dev only — start-dev uses an embedded dev database and is not how
+  # the design doc's self-hosted Keycloak instance gets deployed for real.
+  # Google/Facebook IdP federation still requires the founder's own console
+  # setup (see docs/designs/find-my-game-parts.md, Dependencies).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:
