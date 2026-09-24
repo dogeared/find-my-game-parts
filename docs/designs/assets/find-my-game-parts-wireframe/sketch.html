@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Find My Game Parts — wireframe sketch</title>
+<style>
+  /* Retro 8-bit palette meets old-Google minimalism: huge whitespace,
+     one search box, playful pixel chrome, nothing animated or busy. */
+  :root {
+    --bg: #f4ecd8;
+    --ink: #2c2137;
+    --accent: #e2703a;
+    --accent-2: #4d7c8a;
+    --border: #2c2137;
+    --unit: 4px; /* pixel-grid unit, everything snaps to multiples of this */
+  }
+
+  /* Color schemes — cosmetic only, independent of login state. Anyone can
+     pick one; it's saved as a cookie so it survives a refresh whether or
+     not the visitor ever signs in. */
+  [data-theme="arcade"] {
+    --bg: #191534;
+    --ink: #f4f1ff;
+    --accent: #ff5da2;
+    --accent-2: #4be3c8;
+    --border: #f4f1ff;
+  }
+  [data-theme="seafoam"] {
+    --bg: #eef6f2;
+    --ink: #123b34;
+    --accent: #ff8a5c;
+    --accent-2: #2a9d8f;
+    --border: #123b34;
+  }
+  [data-theme="mono"] {
+    --bg: #ffffff;
+    --ink: #1a1a1a;
+    --accent: #1a1a1a;
+    --accent-2: #6b6b6b;
+    --border: #1a1a1a;
+  }
+
+  /* Accessibility override always wins over whichever color scheme is
+     active — it's a needs-based mode, not a taste option. */
+  [data-a11y="on"] {
+    --bg: #000000;
+    --ink: #ffffff;
+    --accent: #ffe066;
+    --accent-2: #66ffe0;
+    --border: #ffffff;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Courier New", Courier, monospace; /* system monospace stands in for a pixel font */
+    font-size: 17px;
+    min-height: 100vh;
+  }
+  [data-a11y="on"] body { font-size: 22px; line-height: 1.6; }
+
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    padding: calc(var(--unit) * 3);
+    flex-wrap: wrap;
+  }
+  .theme-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .theme-label {
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  [data-a11y="on"] .theme-label { font-size: 15px; opacity: 1; }
+  .swatch {
+    width: 26px;
+    height: 26px;
+    border: 3px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch.active { box-shadow: 3px 3px 0 var(--border); }
+  .swatch[data-swatch="parchment"] { background: #f4ecd8; }
+  .swatch[data-swatch="arcade"] { background: #191534; }
+  .swatch[data-swatch="seafoam"] { background: #eef6f2; }
+  .swatch[data-swatch="mono"] { background: #ffffff; }
+
+  .a11y-toggle {
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--bg);
+    color: var(--ink);
+    border: 3px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  [data-a11y="on"] .a11y-toggle { font-size: 17px; }
+  .a11y-toggle:active { transform: translate(3px, 3px); box-shadow: none; }
+
+  .hero {
+    max-width: 660px;
+    margin: 4vh auto 0;
+    text-align: center;
+    padding: 0 calc(var(--unit) * 4);
+  }
+  .wordmark {
+    display: inline-block;
+    font-size: 28px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: 4px solid var(--border);
+    box-shadow: 6px 6px 0 var(--border);
+    background: var(--bg);
+  }
+  .wordmark span { color: var(--accent); }
+  [data-a11y="on"] .wordmark { font-size: 32px; }
+
+  .tagline {
+    margin-top: 18px;
+    font-size: 15px;
+    letter-spacing: 1px;
+    opacity: 0.75;
+  }
+  [data-a11y="on"] .tagline { font-size: 18px; opacity: 1; }
+
+  .search-row {
+    margin-top: 36px;
+    display: flex;
+    gap: 10px;
+  }
+  .search-box {
+    flex: 1;
+    font-family: inherit;
+    font-size: 17px;
+    padding: 12px 14px;
+    border: 3px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .search-box::placeholder { color: var(--ink); opacity: 0.55; }
+  .btn {
+    font-family: inherit;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    background: var(--accent);
+    color: var(--ink);
+    border: 3px solid var(--border);
+    box-shadow: 4px 4px 0 var(--border);
+    cursor: pointer;
+  }
+  .btn:active { transform: translate(4px, 4px); box-shadow: none; }
+  .btn-ghost { background: var(--bg); }
+
+  .request-callout {
+    margin-top: 22px;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 14px;
+    border: 2px dashed var(--border);
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  }
+  [data-a11y="on"] .request-callout { font-size: 17px; border-width: 3px; }
+  .request-callout b { color: var(--accent-2); }
+
+  .section-label {
+    max-width: 660px;
+    margin: 56px auto 10px;
+    padding: 0 calc(var(--unit) * 4);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  [data-a11y="on"] .section-label { font-size: 17px; opacity: 1; }
+
+  .inventory {
+    max-width: 660px;
+    margin: 0 auto 6vh;
+    padding: 0 calc(var(--unit) * 4);
+    display: grid;
+    gap: 10px;
+  }
+  .game-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 3px solid var(--border);
+    background: var(--bg);
+    padding: 12px 14px;
+  }
+  .game-row .name { font-size: 16px; }
+  [data-a11y="on"] .game-row .name { font-size: 19px; }
+  .game-row .tag {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--accent-2);
+    color: var(--bg);
+    padding: 4px 8px;
+  }
+  [data-a11y="on"] .game-row .tag { font-size: 13px; }
+
+  /* Request-a-part panel — shown as a second "screen" further down the
+     sketch so both states are visible in one scroll/screenshot. */
+  .panel {
+    max-width: 660px;
+    margin: 30px auto 8vh;
+    padding: 20px;
+    border: 4px solid var(--border);
+    box-shadow: 6px 6px 0 var(--border);
+  }
+  .panel h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  [data-a11y="on"] .panel h2 { font-size: 22px; }
+  .panel .sub { font-size: 14px; opacity: 0.7; margin-bottom: 16px; }
+  [data-a11y="on"] .panel .sub { font-size: 17px; opacity: 1; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+  [data-a11y="on"] .field label { font-size: 16px; opacity: 1; }
+  .field textarea, .field input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 16px;
+    padding: 10px;
+    border: 3px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .lock-note {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+  [data-a11y="on"] .lock-note { font-size: 16px; opacity: 1; }
+
+  /* Auth gate — appears when an unauthenticated visitor hits submit.
+     Sign in and Create account are two tabs over the same panel, not two
+     separate pages, so the toggle-back is free. */
+  .auth-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .auth-tab {
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border: 3px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    opacity: 0.55;
+    cursor: pointer;
+  }
+  [data-a11y="on"] .auth-tab { font-size: 16px; }
+  .auth-tab.active { opacity: 1; background: var(--accent); }
+  .btn-primary { background: var(--accent); width: 100%; margin-top: 4px; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  [data-a11y="on"] .divider { font-size: 16px; opacity: 1; }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    border-top: 2px dashed var(--border);
+  }
+  .social-row { display: grid; gap: 10px; }
+  .btn-social {
+    background: var(--bg);
+    text-align: left;
+  }
+  .switch-note { font-size: 14px; margin-top: 14px; }
+  [data-a11y="on"] .switch-note { font-size: 17px; }
+  .switch-note a { color: var(--accent-2); cursor: pointer; text-decoration: underline; }
+
+  /* Mono's accent equals its ink color, and high-contrast's yellow accent
+     reads poorly against white text — a filled button goes invisible or
+     low-contrast in both. Drop the fill so the border + text carry it. */
+  [data-theme="mono"] .btn,
+  [data-theme="mono"] .auth-tab.active,
+  [data-a11y="on"] .btn,
+  [data-a11y="on"] .auth-tab.active {
+    background: var(--bg);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body data-a11y="off">
+
+  <div class="topbar">
+    <!-- Color scheme is a taste option, works identically signed in or
+         out, and is saved as a cookie (not tied to any account) so it
+         survives a refresh either way. -->
+    <div class="theme-picker">
+      <span class="theme-label">Theme:</span>
+      <button class="swatch active" data-swatch="parchment" title="Parchment" onclick="setTheme('parchment', this)"></button>
+      <button class="swatch" data-swatch="arcade" title="Arcade Night" onclick="setTheme('arcade', this)"></button>
+      <button class="swatch" data-swatch="seafoam" title="Seafoam" onclick="setTheme('seafoam', this)"></button>
+      <button class="swatch" data-swatch="mono" title="Mono" onclick="setTheme('mono', this)"></button>
+    </div>
+    <!-- Single, obvious accessibility toggle — not buried in a settings
+         menu, and it overrides whichever color scheme is picked above. -->
+    <button class="a11y-toggle" onclick="toggleA11y()">◆ High contrast / large text</button>
+  </div>
+
+  <div class="hero">
+    <div class="wordmark">FIND MY GAME<span>·</span>PARTS</div>
+    <div class="tagline">missing a piece? We may have it. Or, we can get it.</div>
+
+    <div class="search-row">
+      <input class="search-box" type="text" placeholder="Search a game (e.g. Fate of the Fellowship)">
+      <button class="btn">Search</button>
+    </div>
+
+    <!-- The core insight from this session's diagnostic: framing the CTA
+         so a "no results" outcome still converts into a demand signal,
+         instead of reading as a dead end. -->
+    <div class="request-callout">
+      <b>Don't see your game?</b> Let me know if there's a game you need
+      parts for, even if I don't currently have it available.
+      If enough people need parts, I'll get it.
+      <br><br>
+      <button class="btn btn-ghost">Request a part →</button>
+    </div>
+  </div>
+
+  <div class="section-label">In stock right now</div>
+  <div class="inventory">
+    <div class="game-row">
+      <span class="name">LOTR: Fate of the Fellowship</span>
+      <span class="tag">parts available</span>
+    </div>
+    <div class="game-row">
+      <span class="name">Brass: Birmingham</span>
+      <span class="tag">parts available</span>
+    </div>
+    <div class="game-row">
+      <span class="name">Gloomhaven: Jaws of the Lion</span>
+      <span class="tag">parts available</span>
+    </div>
+  </div>
+
+  <!-- Second screen: the request form itself, reached via "Request a part"
+       or a no-results search. Auth required only here — browsing above is
+       fully public. Empty/edge states noted inline as comments, not built
+       out in this sketch. -->
+  <div class="panel">
+    <h2>Request a part</h2>
+    <div class="sub">sign in required to submit — browsing is always free</div>
+
+    <div class="field">
+      <label>Game (BGG lookup)</label>
+      <input type="text" placeholder="Start typing a title…" value="LOTR: Fate of the Fellowship">
+    </div>
+    <div class="field">
+      <label>What part do you need? (freeform, be specific)</label>
+      <textarea rows="3" placeholder="e.g. 1x Stealth Rohan card, or 3x Shadow Troop meeples"></textarea>
+    </div>
+    <div class="field">
+      <label>Max you'd pay (optional)</label>
+      <input type="text" placeholder="$10">
+    </div>
+    <div class="lock-note">
+      you'll get a reply once I check what's on hand — sign in below to send this
+    </div>
+  </div>
+
+  <!-- Third screen: the auth gate itself. Email/password is the primary,
+       first-class path (not an afterthought below the social buttons) —
+       Create account is a tab away, not a separate page. -->
+  <div class="panel">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="setAuthTab(this, true)">Sign in</button>
+      <button class="auth-tab" onclick="setAuthTab(this, false)">Create account</button>
+    </div>
+    <h2 id="auth-heading">Sign in to send your request</h2>
+    <div class="sub" id="auth-sub">new here? switch to "Create account" above</div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="text" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" id="auth-submit">Sign in →</button>
+
+    <div class="divider">or</div>
+    <div class="social-row">
+      <button class="btn btn-social">Continue with Google</button>
+      <button class="btn btn-social">Continue with Facebook</button>
+    </div>
+
+    <div class="switch-note" id="auth-switch">
+      New here? <a onclick="setAuthTab(document.querySelectorAll('.auth-tab')[1], false)">Create an account</a>
+    </div>
+  </div>
+
+<script>
+  // --- Color scheme: cosmetic, cookie-backed, works whether or not the
+  // visitor is signed in. A cookie (not localStorage) per explicit request,
+  // since the theme is meant to travel with the browser, not an account.
+  function setCookie(name, value, days) {
+    try {
+      var maxAge = days * 24 * 60 * 60;
+      document.cookie = name + '=' + encodeURIComponent(value) + '; max-age=' + maxAge + '; path=/; SameSite=Lax';
+    } catch (e) {}
+  }
+  function getCookie(name) {
+    try {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (e) { return null; }
+  }
+  function setTheme(theme, swatchEl) {
+    if (theme === 'parchment') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    document.querySelectorAll('.swatch').forEach(function (s) { s.classList.remove('active'); });
+    if (swatchEl) swatchEl.classList.add('active');
+    setCookie('gb_theme', theme, 365);
+  }
+
+  // --- Accessibility mode: a needs-based override, kept separate from
+  // taste. Best-effort persistence only — the toggle must still work if
+  // storage is blocked (private windows, locked-down browsers).
+  function applyA11y(on) {
+    document.body.parentElement.setAttribute('data-a11y', on ? 'on' : 'off');
+  }
+  function toggleA11y() {
+    var current = document.body.parentElement.getAttribute('data-a11y') === 'on';
+    var next = !current;
+    applyA11y(next);
+    try { localStorage.setItem('gb_a11y', next ? '1' : '0'); } catch (e) {}
+  }
+
+  function setAuthTab(tabEl, isSignIn) {
+    document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.remove('active'); });
+    tabEl.classList.add('active');
+    document.getElementById('auth-heading').textContent = isSignIn
+      ? 'Sign in to send your request'
+      : 'Create an account to send your request';
+    document.getElementById('auth-sub').textContent = isSignIn
+      ? 'new here? switch to "Create account" above'
+      : 'just an email and password — takes a minute';
+    document.getElementById('auth-submit').textContent = isSignIn ? 'Sign in →' : 'Create account →';
+    document.getElementById('auth-switch').innerHTML = isSignIn
+      ? 'New here? <a onclick="setAuthTab(document.querySelectorAll(&quot;.auth-tab&quot;)[1], false)">Create an account</a>'
+      : 'Already have an account? <a onclick="setAuthTab(document.querySelectorAll(&quot;.auth-tab&quot;)[0], true)">Sign in</a>';
+  }
+
+  // Restore saved preferences on load.
+  var savedTheme = getCookie('gb_theme');
+  if (savedTheme && savedTheme !== 'parchment') {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    var el = document.querySelector('.swatch[data-swatch="' + savedTheme + '"]');
+    if (el) { document.querySelectorAll('.swatch').forEach(function (s) { s.classList.remove('active'); }); el.classList.add('active'); }
+  }
+  try {
+    if (localStorage.getItem('gb_a11y') === '1') applyA11y(true);
+  } catch (e) {}
+</script>
+</body>
+</html>
