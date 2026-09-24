@@ -4,10 +4,10 @@ services:
       context: .
       target: dev
     ports:
-      - "3000:3000"
+      - "3030:3000"
     environment:
       DATABASE_URL: postgresql://app:app@db:5432/find_my_game_parts
-      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: http://localhost:3030
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me}
       KEYCLOAK_ISSUER: http://keycloak:8080/realms/find-my-game-parts
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-find-my-game-parts}
@@ -29,7 +29,9 @@ services:
       POSTGRES_PASSWORD: app
       POSTGRES_DB: find_my_game_parts
     ports:
-      - "5432:5432"
+      # Host port 6543 (not Postgres's default 5432) to avoid colliding with
+      # another project's Postgres running at the same time.
+      - "6543:5432"
     volumes:
       - db-data:/var/lib/postgresql
 
@@ -44,7 +46,9 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      - "8080:8080"
+      # Host port 8090 (not Keycloak's default 8080) so this can run
+      # alongside another project's own Keycloak instance at the same time.
+      - "8090:8080"
 
 volumes:
   db-data:

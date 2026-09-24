@@ -9,7 +9,7 @@ cp .env.example .env
 docker compose up
 ```
 
-This starts the app (`localhost:3000`), Postgres, and a dev-mode Keycloak (`localhost:8080`, admin/admin).
+This starts the app (`localhost:3030`), Postgres, and a dev-mode Keycloak (`localhost:8090`, admin/admin).
 
 First run only — apply the database schema:
 
