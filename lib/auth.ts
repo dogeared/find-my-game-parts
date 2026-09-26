@@ -57,25 +57,34 @@ export const authOptions: NextAuthOptions = {
       idToken: true,
       checks: ["pkce", "state"],
       profile(profile) {
+        // Keycloak client has a "groups" protocol mapper (added via kcadm)
+        // putting realm group membership directly on the ID token — this
+        // is the source of truth for admin status, not a DB-only flag, so
+        // adding/removing an admin is just Keycloak group membership, no
+        // app-specific admin UI needed.
+        const rawProfile = profile as typeof profile & { groups?: unknown };
+        const groups = Array.isArray(rawProfile.groups) ? (rawProfile.groups as string[]) : [];
         return {
           id: profile.sub,
           email: profile.email,
           name: profile.name ?? profile.preferred_username,
+          isAdmin: groups.includes("admin"),
         };
       },
     },
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, profile }) {
+    async jwt({ token, profile, user }) {
       if (profile?.sub && profile.email) {
-        const user = await prisma.user.upsert({
+        const isAdmin = Boolean(user?.isAdmin);
+        const dbUser = await prisma.user.upsert({
           where: { keycloakSub: profile.sub },
-          update: { email: profile.email },
-          create: { keycloakSub: profile.sub, email: profile.email },
+          update: { email: profile.email, isAdmin },
+          create: { keycloakSub: profile.sub, email: profile.email, isAdmin },
         });
-        token.userId = user.id;
-        token.isAdmin = user.isAdmin;
+        token.userId = dbUser.id;
+        token.isAdmin = dbUser.isAdmin;
       }
       return token;
     },

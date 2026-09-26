@@ -46,6 +46,37 @@ done, sign-in will fail even though the app itself is running.
    - Client authentication: **On** (a confidential client, so it gets a client secret)
    - Valid redirect URIs: `http://localhost:3030/api/auth/callback/keycloak`
 6. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
+7. **Create an `admin` group** and add its members via **Users** → select a user → **Groups** → **Join Group**. Group membership *is* admin status in this app — see "Admins are managed via Keycloak groups" below.
+
+### Admins are managed via Keycloak groups, not a database flag
+
+`isAdmin` is synced automatically from Keycloak's `admin` group on every
+login (`lib/auth.ts`) — to make someone an admin, add them to that group in
+Keycloak's console; to revoke it, remove them (takes effect on their next
+login, since sessions are stateless JWTs). There's deliberately no
+"manage admins" page in this app.
+
+This depends on a group-membership protocol mapper on the client, which
+`kcadm` needs to create (there's no console UI step for this — it's a
+one-time API call). Run it after creating the client above:
+
+```bash
+CLIENT_UUID=$(docker compose exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+  --server http://localhost:8080 --realm master --user admin --password admin > /dev/null 2>&1; \
+  docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r find-my-game-parts \
+  -q clientId=find-my-game-parts --fields id --format csv --noquotes | tail -1)
+
+docker compose exec keycloak /opt/keycloak/bin/kcadm.sh create \
+  clients/$CLIENT_UUID/protocol-mappers/models -r find-my-game-parts \
+  -s name=groups -s protocol=openid-connect -s protocolMapper=oidc-group-membership-mapper \
+  -s 'config."full.path"=false' -s 'config."id.token.claim"=true' \
+  -s 'config."access.token.claim"=true' -s 'config."userinfo.token.claim"=true' \
+  -s 'config."claim.name"=groups'
+```
+
+Like the rest of this Keycloak instance's data, this mapper is not
+persisted (`start-dev` uses an embedded database) — redo it if the
+container is ever recreated, not just restarted.
 
 ### 2. Google as an identity provider
 

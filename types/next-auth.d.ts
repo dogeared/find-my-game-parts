@@ -1,4 +1,4 @@
-import type { DefaultSession } from "next-auth";
+import type { DefaultSession, User } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -6,6 +6,13 @@ declare module "next-auth" {
       id: string;
       isAdmin: boolean;
     };
+  }
+
+  // Without a database adapter, this is exactly what our provider's
+  // `profile()` returns, unchanged, as the `user` param in the jwt
+  // callback (verified by reading next-auth/core/lib/callback-handler.js).
+  interface User {
+    isAdmin?: boolean;
   }
 }
 
