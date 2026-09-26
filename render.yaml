@@ -1,0 +1,81 @@
+# Render Blueprint for Find My Game Parts. Validate after any change:
+#   render blueprints validate
+#
+# Two Docker-based web services (this app, and a separate Keycloak
+# instance built from keycloak/Dockerfile with the custom theme baked in)
+# plus two isolated Postgres databases — Keycloak gets its own database,
+# never sharing schema/tables with the app's.
+#
+# Values marked `sync: false` are NOT stored here — set them in the Render
+# dashboard after the first deploy (see README's "Production deployment").
+
+databases:
+  - name: find-my-game-parts-db
+    plan: basic-256mb
+    databaseName: find_my_game_parts
+    user: app
+
+  - name: find-my-game-parts-keycloak-db
+    plan: basic-256mb
+    databaseName: keycloak
+    user: keycloak
+
+services:
+  - type: web
+    name: find-my-game-parts-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: find-my-game-parts-db
+          property: connectionString
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      # Set after the first deploy, once you know this service's real URL:
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: KEYCLOAK_ISSUER
+        sync: false
+      - key: KEYCLOAK_PUBLIC_URL
+        sync: false
+      - key: KEYCLOAK_REALM
+        value: find-my-game-parts
+      - key: KEYCLOAK_CLIENT_ID
+        value: find-my-game-parts
+      - key: KEYCLOAK_CLIENT_SECRET
+        sync: false
+      - key: KEYCLOAK_ADMIN_GROUP
+        value: admin
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: BGG_API_BASE
+        value: https://boardgamegeek.com/xmlapi2
+      - key: BGG_API_TOKEN
+        sync: false
+
+  - type: web
+    name: find-my-game-parts-keycloak
+    runtime: docker
+    dockerfilePath: ./keycloak/Dockerfile
+    dockerContext: ./keycloak
+    plan: starter
+    envVars:
+      - key: KC_DB
+        value: postgres
+      - key: KC_DB_URL
+        fromDatabase:
+          name: find-my-game-parts-keycloak-db
+          property: connectionString
+      - key: KC_BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
+        generateValue: true
+      # Set after the first deploy, once you know this service's real URL
+      # (must be a full https:// URL — hostname-strict is on by default):
+      - key: KC_HOSTNAME
+        sync: false

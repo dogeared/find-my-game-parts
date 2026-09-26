@@ -161,12 +161,117 @@ so editing `styles.css` takes effect on refresh with no rebuild or restart.
 `find-my-game-parts` as part of its bootstrap (`loginTheme` realm attribute)
 — that setting is what actually activates it; the files alone don't.
 
-**Production:** copy `keycloak/themes/find-my-game-parts/` into your
-production Keycloak's `themes/` directory (or bake it into a custom
-Keycloak image via a `COPY` in a Dockerfile — more durable than a bind
-mount for a real deployment), then set the realm's **Login Theme** to
-`find-my-game-parts` in the admin console (**Realm settings** → **Themes**).
-No rebuild of the app itself is needed — this only touches Keycloak.
+**Production:** `keycloak/Dockerfile` already bakes this theme into a
+production Keycloak image (see "Production deployment" below) — no bind
+mount, since production deploys a built image. Set the realm's **Login
+Theme** to `find-my-game-parts` in the admin console (**Realm settings** →
+**Themes**), or via `keycloak/setup-realm.sh`. No rebuild of the app
+itself is needed — this only touches Keycloak.
+
+## Production deployment
+
+Deploys to Render via `render.yaml` (this repo's blueprint) — two Docker
+web services (this app, and a separate Keycloak instance with the custom
+theme baked in via `keycloak/Dockerfile`) plus two isolated Postgres
+databases. Keycloak gets its own database; it never shares schema/tables
+with the app's.
+
+Everything below was actually verified during development, not just
+written from Keycloak's docs: `keycloak/Dockerfile`'s two-stage
+`build` + `start --optimized` was build-tested locally, and then
+boot-tested against a real Postgres database (confirmed
+`Profile prod activated`, schema migrations ran, listening on 8080) —
+see the commit history for `keycloak/Dockerfile` and `render.yaml`.
+
+### 1. Prerequisites
+
+- A GitHub repo with this code pushed (`git remote add origin ...`, `git push`)
+  — none exists yet as of this writing.
+- A [Render](https://render.com) account, and the `render` CLI installed
+  locally (`brew install render`, or see Render's docs) if you want to
+  validate/deploy from the command line instead of the dashboard.
+- Real Google/Facebook OAuth apps pointed at your production domain (same
+  console steps as the "Keycloak, Google, and Facebook setup" section
+  above, just with production redirect URIs instead of `localhost`).
+- BGG API access approved (see Dependencies in
+  [the design doc](docs/designs/find-my-game-parts.md)) and a
+  [Resend](https://resend.com) API key, if you want those live in
+  production from day one — both are optional at first (the app degrades
+  gracefully: BGG search returns empty, email failures are logged, not fatal).
+
+### 2. Validate the blueprint
+
+```bash
+render login          # opens a browser auth flow against your own Render account
+render blueprints validate render.yaml
+```
+
+Fix anything it flags before deploying. Re-run this after any change to
+`render.yaml`.
+
+### 3. Deploy
+
+In the Render dashboard: **New** → **Blueprint** → connect the GitHub repo
+→ Render reads `render.yaml` and provisions both databases and both
+services. First deploy will fail health checks until the `sync: false`
+env vars below are set — that's expected, not a bug.
+
+### 4. Set the `sync: false` environment variables
+
+`render.yaml` deliberately does not store these — set them in each
+service's **Environment** tab in the Render dashboard, after you know the
+real URLs Render assigned (or your own custom domains, once attached):
+
+**On `find-my-game-parts-app`:**
+| Var | Value |
+|---|---|
+| `NEXTAUTH_URL` | This service's own public URL (e.g. `https://findmygameparts.com`) |
+| `KEYCLOAK_ISSUER` | `<keycloak public URL>/realms/find-my-game-parts` |
+| `KEYCLOAK_PUBLIC_URL` | The Keycloak service's public URL (e.g. `https://auth.findmygameparts.com`) — **unlike local dev, these can be the same public URL used for both**; production has no container-vs-host split, since both the browser and the app reach Keycloak over the same real internet hostname |
+| `KEYCLOAK_CLIENT_SECRET` | From `keycloak/setup-realm.sh`'s output (step 5) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Your Resend credentials |
+| `BGG_API_TOKEN` | Once BGG approves your application — also needs wiring into `lib/bgg.ts` (TODOS.md tracks this) |
+
+**On `find-my-game-parts-keycloak`:**
+| Var | Value |
+|---|---|
+| `KC_HOSTNAME` | This service's own full public URL, e.g. `https://auth.findmygameparts.com` — `hostname-strict` defaults to `true` in production and requires this |
+
+### 5. Bootstrap the realm
+
+SSH into the running Keycloak service and run the same script used for
+local dev, pointed at your real production app URL:
+
+```bash
+render ssh find-my-game-parts-keycloak
+APP_PUBLIC_URL=https://findmygameparts.com sh -c "$(cat keycloak/setup-realm.sh)"
+```
+
+Because `APP_PUBLIC_URL` starts with `https://`, the script automatically
+skips the `sslRequired=NONE` calls (those are dev-only, for plain-http
+`localhost` — see the script's comments). Copy the printed client secret
+into `KEYCLOAK_CLIENT_SECRET` (step 4). Then, in the Keycloak console:
+create real users, add admins to the `admin` group, and set up Google/
+Facebook as identity providers with production redirect URIs (same steps
+as local dev, above).
+
+### 6. Run database migrations
+
+One-off job against the app's database (Render dashboard → the app
+service → **Shell**, or `render ssh`):
+
+```bash
+npx prisma migrate deploy
+```
+
+### 7. CI/CD
+
+No GitHub Actions workflow exists yet. Once the repo is on GitHub, a
+minimal `.github/workflows/ci.yml` running `npx tsc --noEmit`, `npx eslint .`,
+and `npx vitest run` on every PR is the natural next step — Render's own
+GitHub integration handles continuous deploy on merge to `main`
+automatically once the blueprint is connected (step 3), so CI here is
+about catching regressions before merge, not triggering the deploy itself.
 
 ## Tests, lint, typecheck
 
