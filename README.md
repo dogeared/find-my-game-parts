@@ -23,6 +23,20 @@ This is hands-on setup across three consoles. None of it should be
 automated — creating OAuth apps needs a real person driving it. Until it's
 done, sign-in will fail even though the app itself is running.
 
+**Fast path for steps 1 and the group mapper below:** `keycloak/setup-realm.sh`
+scripts the whole realm/client/group/mapper bootstrap via `kcadm` (everything
+except Google/Facebook and creating real users, which still need a person).
+This Keycloak instance's realm data isn't persisted (`start-dev`, embedded
+database) — a container *recreate* wipes it, which has already happened
+more than once during development — so re-running this script is faster
+than redoing the console clicks by hand:
+```bash
+docker compose cp keycloak/setup-realm.sh keycloak:/tmp/setup-realm.sh
+docker compose exec keycloak sh /tmp/setup-realm.sh
+```
+It prints a new client secret each time it creates the client — update
+`KEYCLOAK_CLIENT_SECRET` in `.env` and `docker compose restart app` after.
+
 ### 1. Create the realm and client in Keycloak
 
 1. `docker compose up`.
@@ -127,6 +141,32 @@ purpose: only the browser-facing authorization redirect uses
 uses the internal `KEYCLOAK_ISSUER`, which is hardcoded in `docker-compose.yml`
 and deliberately not something `.env` can override — see the comment there
 if you ever need to change the realm name or port mapping.
+
+## Custom Keycloak login theme
+
+`keycloak/themes/find-my-game-parts/` is a CSS-only login theme matching
+the app's own Parchment palette/fonts — it extends Keycloak 26's built-in
+`keycloak.v2` theme (`theme.properties`'s `parent=keycloak.v2`) rather than
+forking any `.ftl` templates, so it stays this simple and picks up
+Keycloak's own future template fixes automatically. The actual class names
+it targets (`.pf-v5-c-login__main`, `.pf-v5-c-button.pf-m-primary`, etc.)
+were confirmed by extracting the real theme JAR from a running container
+(`org.keycloak.keycloak-themes-26.4.7.jar`, `theme/keycloak.v2/login/`),
+not guessed.
+
+**Local dev:** already wired up — `docker-compose.yml` bind-mounts
+`keycloak/themes` into the container, and `start-dev` doesn't cache themes,
+so editing `styles.css` takes effect on refresh with no rebuild or restart.
+`keycloak/setup-realm.sh` sets the realm's login theme to
+`find-my-game-parts` as part of its bootstrap (`loginTheme` realm attribute)
+— that setting is what actually activates it; the files alone don't.
+
+**Production:** copy `keycloak/themes/find-my-game-parts/` into your
+production Keycloak's `themes/` directory (or bake it into a custom
+Keycloak image via a `COPY` in a Dockerfile — more durable than a bind
+mount for a real deployment), then set the realm's **Login Theme** to
+`find-my-game-parts` in the admin console (**Realm settings** → **Themes**).
+No rebuild of the app itself is needed — this only touches Keycloak.
 
 ## Tests, lint, typecheck
 

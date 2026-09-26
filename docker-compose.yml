@@ -61,6 +61,14 @@ services:
       # Host port 8090 (not Keycloak's default 8080) so this can run
       # alongside another project's own Keycloak instance at the same time.
       - "8090:8080"
+    volumes:
+      # Custom login theme (keycloak/themes/find-my-game-parts/) — matches
+      # the app's own Parchment palette/fonts. start-dev doesn't cache
+      # themes, so this takes effect immediately with no rebuild/restart.
+      # Still needs the realm's Login Theme set to "find-my-game-parts"
+      # once (README's Keycloak setup section) — the file alone doesn't
+      # activate it.
+      - ./keycloak/themes:/opt/keycloak/themes:ro
 
 volumes:
   db-data:
