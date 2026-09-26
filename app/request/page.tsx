@@ -143,7 +143,7 @@ function RequestForm() {
           rows={3}
           value={partDescription}
           onChange={(e) => setPartDescription(e.target.value)}
-          placeholder="e.g. 1x Stealth Rohan card, or 3x Shadow Troop meeples"
+          placeholder="e.g. Stealth Rohan card, or Shadow Troop meeple"
         />
       </div>
 
