@@ -11,7 +11,12 @@ FROM base AS dev
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+# node_modules lives in its own anonymous volume in docker-compose.yml (kept
+# separate from the bind-mounted source so hot-reload doesn't churn on it),
+# which means a schema change or a fresh volume can leave the generated
+# Prisma client stale or missing entirely. Regenerate on every start — it's
+# fast and idempotent — rather than requiring a manual `prisma generate`.
+CMD ["sh", "-c", "npx prisma generate && npm run dev"]
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
