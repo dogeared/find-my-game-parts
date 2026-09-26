@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AccessibilityToggle } from "@/components/AccessibilityToggle";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
+import { ThemePicker } from "@/components/ThemePicker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SessionProviderWrapper>
           <div className="topbar">
+            <ThemePicker />
             <AccessibilityToggle />
           </div>
           {children}

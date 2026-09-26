@@ -1,8 +1,8 @@
 /* Design tokens carried over from the approved wireframe
    (docs/designs/assets/find-my-game-parts-wireframe/sketch.html).
-   Per the eng review's scope trim, only the Parchment scheme ships at v1 —
-   the other three themes are deferred, but the CSS variable structure is
-   kept extensible so adding them later is cheap (Constraints in the design doc). */
+   All four schemes now ship (scope trim reversed post-launch — cheap
+   enough that the deferral wasn't worth it in practice). Accessibility
+   overrides always win over whichever scheme is picked. */
 
 :root {
   --bg: #f4ecd8;
@@ -10,6 +10,30 @@
   --accent: #e2703a;
   --accent-2: #4d7c8a;
   --border: #2c2137;
+}
+
+[data-theme="arcade"] {
+  --bg: #191534;
+  --ink: #f4f1ff;
+  --accent: #ff5da2;
+  --accent-2: #4be3c8;
+  --border: #f4f1ff;
+}
+
+[data-theme="seafoam"] {
+  --bg: #eef6f2;
+  --ink: #123b34;
+  --accent: #ff8a5c;
+  --accent-2: #2a9d8f;
+  --border: #123b34;
+}
+
+[data-theme="mono"] {
+  --bg: #ffffff;
+  --ink: #1a1a1a;
+  --accent: #1a1a1a;
+  --accent-2: #6b6b6b;
+  --border: #1a1a1a;
 }
 
 [data-a11y="on"] {
@@ -45,7 +69,48 @@ a {
 .topbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
   padding: 12px;
+  flex-wrap: wrap;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch.active {
+  box-shadow: 3px 3px 0 var(--border);
+}
+
+.swatch[data-swatch="parchment"] {
+  background: #f4ecd8;
+}
+.swatch[data-swatch="arcade"] {
+  background: #191534;
+}
+.swatch[data-swatch="seafoam"] {
+  background: #eef6f2;
+}
+.swatch[data-swatch="mono"] {
+  background: #ffffff;
 }
 
 .a11y-toggle {
@@ -74,9 +139,10 @@ a {
   cursor: pointer;
 }
 
-/* Mono would collapse accent/ink to the same color, and high-contrast's
-   yellow accent reads poorly against white text — kept for when the other
-   themes ship, since this bug was already found once (plan-eng-review). */
+/* Mono's accent equals its ink color, and high-contrast's yellow accent
+   reads poorly against white text — a filled button goes invisible or
+   low-contrast in both (found once already in the wireframe review). */
+[data-theme="mono"] .btn,
 [data-a11y="on"] .btn {
   background: var(--bg);
   color: var(--ink);
