@@ -1,0 +1,7 @@
+set -e
+
+echo "Running snyk test (dependency vulnerabilities)..."
+snyk test
+
+echo "Running snyk code test (static analysis)..."
+snyk code test

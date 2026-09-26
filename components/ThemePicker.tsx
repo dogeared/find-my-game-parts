@@ -11,7 +11,13 @@ const COOKIE_MAX_AGE_DAYS = 365;
 function setCookie(name: string, value: string, days: number) {
   try {
     const maxAge = days * 24 * 60 * 60;
-    document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${maxAge}; path=/; SameSite=Lax`;
+    // Secure is conditional, not hardcoded: an unconditional Secure
+    // attribute would silently stop the cookie from being sent at all over
+    // plain http://localhost in local dev (Snyk Code flagged this cookie
+    // as missing Secure — fixed, but Secure only makes sense once there's
+    // actually HTTPS to protect).
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${maxAge}; path=/; SameSite=Lax${secure}`;
   } catch {
     // ignore — cookies may be blocked
   }

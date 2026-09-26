@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prepare": "husky"
   },
   "dependencies": {
     "next": "16.3.6",
@@ -19,6 +20,7 @@
     "@prisma/client": "7.10.0",
     "@prisma/adapter-pg": "7.10.0",
     "pg": "8.23.0",
+    "rate-limiter-flexible": "11.2.1",
     "resend": "6.28.1"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
     "@types/pg": "8.23.1",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
+    "husky": "9.1.7",
     "vitest": "5.0.1"
   }
 }
