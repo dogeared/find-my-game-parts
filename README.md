@@ -86,9 +86,14 @@ Then visit http://localhost:3030/request and sign in — "Sign in with Google" a
 
 **Note on the two different Keycloak URLs:** the app itself talks to Keycloak
 over Docker's internal network (`http://keycloak:8080`, in `KEYCLOAK_ISSUER`),
-but your browser and Google/Facebook talk to it over `http://localhost:8090`.
-Both reach the same container — that's host-vs-container networking, not two
-separate Keycloak instances.
+but your browser and Google/Facebook talk to it over `http://localhost:8090`
+(`KEYCLOAK_PUBLIC_URL`). Both reach the same container — that's host-vs-container
+networking, not two separate Keycloak instances. `lib/auth.ts` splits these on
+purpose: only the browser-facing authorization redirect uses
+`KEYCLOAK_PUBLIC_URL`; everything else (discovery, token exchange, userinfo)
+uses the internal `KEYCLOAK_ISSUER`, which is hardcoded in `docker-compose.yml`
+and deliberately not something `.env` can override — see the comment there
+if you ever need to change the realm name or port mapping.
 
 ## Tests, lint, typecheck
 
