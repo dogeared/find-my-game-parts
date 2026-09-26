@@ -22,11 +22,18 @@ import { prisma } from "@/lib/prisma";
 // is only ever merged into query params, never used as the actual
 // endpoint, when `wellKnown` is set). So `wellKnown` is deliberately not
 // used here; every endpoint is specified explicitly instead, split across
-// the two addresses as needed. `issuer` and the token/userinfo/jwks
-// endpoints stay internal because Keycloak stamps the token's `iss` claim
-// based on how the token endpoint request actually arrives (server-to-server,
-// over the internal network) — matching that exactly is what makes
-// openid-client's issuer validation pass.
+// the two addresses as needed.
+//
+// `issuer` MUST be the public base, not the internal one — verified via a
+// live OAUTH_CALLBACK_ERROR: Keycloak's issuer identity for a login session
+// is fixed to wherever the flow started (the browser-facing authorization
+// request), not re-derived per subsequent internal call. Keycloak sends
+// that same issuer back as an `iss` query param on the callback redirect
+// (RFC 9207) and openid-client validates it against `provider.issuer` —
+// with the internal address configured there, every real login failed
+// with "iss mismatch, expected .../keycloak:8080/..., got .../localhost:8090/...".
+// Only the token/userinfo/jwks endpoints stay on the internal address,
+// since those are genuine server-to-server calls the browser never sees.
 const keycloakRealm = process.env.KEYCLOAK_REALM ?? "find-my-game-parts";
 const keycloakInternalBase = `${process.env.KEYCLOAK_ISSUER}`; // already includes /realms/{realm}
 const keycloakPublicBase = `${process.env.KEYCLOAK_PUBLIC_URL}/realms/${keycloakRealm}`;
@@ -37,7 +44,7 @@ export const authOptions: NextAuthOptions = {
       id: "keycloak",
       name: "Find My Game Parts Account",
       type: "oauth",
-      issuer: keycloakInternalBase,
+      issuer: keycloakPublicBase,
       clientId: process.env.KEYCLOAK_CLIENT_ID,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
       authorization: {
