@@ -18,7 +18,6 @@ const limiter = new RateLimiterMemory({
 });
 
 export const config = {
-  runtime: "nodejs",
   matcher: [
     /*
      * Apply to everything except static assets and Next's internal paths —
@@ -26,10 +25,10 @@ export const config = {
      * request from the same per-IP budget as real traffic.
      */
     "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  ]
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
 
