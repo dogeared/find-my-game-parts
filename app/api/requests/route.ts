@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clampQuantity, isValidOptionalText, isValidPrice, isValidText } from "@/lib/validation";
 
 // Auth required — browsing is free, submitting a request is not
 // (Constraints in the design doc). A buyer can request ANY BGG game,
@@ -34,11 +35,17 @@ export async function POST(request: Request) {
     maxPrice?: string;
   };
 
-  if (!partDescription?.trim() || (!gameId && !gameTitle?.trim())) {
+  if (!isValidText(partDescription) || (!gameId && !isValidText(gameTitle))) {
     return NextResponse.json(
-      { error: "A game and part description are required" },
+      { error: "A game and part description are required (500 characters max)" },
       { status: 400 }
     );
+  }
+  if (!isValidOptionalText(editionNote)) {
+    return NextResponse.json({ error: "Edition note is too long (500 characters max)" }, { status: 400 });
+  }
+  if (!isValidPrice(maxPrice)) {
+    return NextResponse.json({ error: "Max price must be a reasonable positive number" }, { status: 400 });
   }
 
   let resolvedGameId = gameId ?? null;
@@ -61,7 +68,7 @@ export async function POST(request: Request) {
       gameId: resolvedGameId,
       requesterId: session.user.id,
       partDescription: partDescription.trim(),
-      quantity: quantity && quantity > 0 ? quantity : 1,
+      quantity: clampQuantity(quantity),
       editionNote: editionNote?.trim() || null,
       maxPrice: maxPrice ? maxPrice : null,
     },

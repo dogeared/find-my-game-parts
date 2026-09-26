@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendRequestResponseEmail } from "@/lib/email";
+import { isValidPrice } from "@/lib/validation";
 
 type PatchBody = {
   criticalityTag?: "UNIQUE" | "FUNGIBLE";
@@ -27,6 +28,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const body = (await request.json()) as PatchBody;
+
+  if (body.status === "AVAILABLE" && !isValidPrice(body.price)) {
+    return NextResponse.json({ error: "Price must be a reasonable positive number" }, { status: 400 });
+  }
 
   const existing = await prisma.partRequest.findUnique({
     where: { id },

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { searchBggGames } from "@/lib/bgg";
+import { isValidText } from "@/lib/validation";
 
 // Public callers see only in-stock games. Admins see everything (including
 // not-yet-stocked games auto-created by buyer requests) so they can toggle
@@ -31,8 +32,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { title, bggId } = body as { title?: string; bggId?: string };
 
-  if (!title?.trim()) {
-    return NextResponse.json({ error: "title is required" }, { status: 400 });
+  if (!isValidText(title)) {
+    return NextResponse.json({ error: "title is required (500 characters max)" }, { status: 400 });
   }
 
   let resolvedBggId = bggId ?? null;
