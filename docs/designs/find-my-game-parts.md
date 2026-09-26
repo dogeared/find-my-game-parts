@@ -112,7 +112,7 @@ Web application (public browse + authenticated request/admin flows). Deployment 
 
 ## Dependencies
 
-- BoardGameGeek XML API access for game lookup (used in both the request form and admin inventory-add form). The BGG API is known to have asynchronous/poll-based behavior and rate limits on some endpoints — both flows need a manual free-text game-name entry fallback so a slow or unavailable lookup never blocks a request or an inventory add.
+- BoardGameGeek XML API access for game lookup (used in both the request form and admin inventory-add form). The BGG API is known to have asynchronous/poll-based behavior and rate limits on some endpoints — both flows need a manual free-text game-name entry fallback so a slow or unavailable lookup never blocks a request or an inventory add. **(Confirmed live 2026-09-27):** since July 2, 2025, BGG's XML API requires a registered, BGG-approved application token (`Authorization: Bearer <token>`) — anonymous requests now get a flat 401. Founder has applied (via boardgamegeek.com/using_the_xml_api); approval reportedly takes 1-2 business days. Until approved, `bgg.ts` returns empty results for every search, so the request form's "require a matched game" gate is temporarily relaxed to "require *some* game (search match or manual fallback)" — see `REQUIRE_BGG_MATCH` in `app/request/page.tsx`, meant to flip back to strict-match-required once `BGG_API_TOKEN` is set.
 - Keycloak instance (self-hosted) configured with Google and Facebook as upstream identity providers, plus native username/password.
 - A domain name (not registered yet — no rush per founder).
 - One trial game purchase (used or new copy of a target title) to seed real inventory and test the flow end-to-end.

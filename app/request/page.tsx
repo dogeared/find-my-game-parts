@@ -5,6 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { BggSearchResult } from "@/lib/bgg";
 
+// BGG's XML API now requires a registered, approved token (bgg.ts returns
+// an empty result for every search until BGG_API_TOKEN exists — see the
+// Dependencies section of the design doc). Until that's approved, gating
+// submission on a REAL BGG match would block every request. Flip this back
+// to `true` once BGG_API_TOKEN is set and bgg.ts sends it — that's the only
+// change needed here; the validity/tooltip logic below already branches on it.
+const REQUIRE_BGG_MATCH = false;
+
 function RequestForm() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
@@ -40,10 +48,25 @@ function RequestForm() {
     }
   }
 
+  const isGameChosen = REQUIRE_BGG_MATCH ? Boolean(bggId) : Boolean(gameTitle.trim());
+  const isQuantityValid = Number.isFinite(quantity) && quantity >= 1;
+  const isPartDescriptionValid = Boolean(partDescription.trim());
+  const isFormValid = isGameChosen && isPartDescriptionValid && isQuantityValid;
+
+  const disabledReason = !isGameChosen
+    ? REQUIRE_BGG_MATCH
+      ? "Select a game from the BGG search results to continue"
+      : "Enter or select a game to continue"
+    : !isPartDescriptionValid
+      ? "Describe the part you need to continue"
+      : !isQuantityValid
+        ? "Enter a valid quantity (1 or more) to continue"
+        : "";
+
   async function submit() {
     setError(null);
-    if (!gameTitle.trim() || !partDescription.trim()) {
-      setError("Game and part description are required.");
+    if (!isFormValid) {
+      setError("Please fill in the required fields.");
       return;
     }
 
@@ -100,7 +123,7 @@ function RequestForm() {
       <h2>Request a part</h2>
 
       <div className="field">
-        <label>Game</label>
+        <label>Game (required)</label>
         <input
           type="text"
           value={gameQuery}
@@ -138,7 +161,7 @@ function RequestForm() {
       </div>
 
       <div className="field">
-        <label>What part do you need? (freeform, be specific)</label>
+        <label>What part do you need? (required, freeform, be specific)</label>
         <textarea
           rows={3}
           value={partDescription}
@@ -148,7 +171,7 @@ function RequestForm() {
       </div>
 
       <div className="field">
-        <label>Quantity</label>
+        <label>Quantity (required)</label>
         <input
           type="number"
           min={1}
@@ -179,7 +202,13 @@ function RequestForm() {
 
       {error && <p style={{ color: "var(--accent)" }}>{error}</p>}
 
-      <button className="btn" onClick={submit}>
+      <button
+        className="btn"
+        onClick={submit}
+        disabled={!isFormValid}
+        title={disabledReason || undefined}
+        style={!isFormValid ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+      >
         Send request →
       </button>
     </main>
