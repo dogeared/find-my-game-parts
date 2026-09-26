@@ -46,15 +46,17 @@ done, sign-in will fail even though the app itself is running.
    - Client authentication: **On** (a confidential client, so it gets a client secret)
    - Valid redirect URIs: `http://localhost:3030/api/auth/callback/keycloak`
 6. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
-7. **Create an `admin` group** and add its members via **Users** → select a user → **Groups** → **Join Group**. Group membership *is* admin status in this app — see "Admins are managed via Keycloak groups" below.
+7. **Create a group named after `KEYCLOAK_ADMIN_GROUP`** (defaults to `admin`) and add its members via **Users** → select a user → **Groups** → **Join Group**. Group membership *is* admin status in this app — see "Admins are managed via Keycloak groups" below.
 
 ### Admins are managed via Keycloak groups, not a database flag
 
-`isAdmin` is synced automatically from Keycloak's `admin` group on every
-login (`lib/auth.ts`) — to make someone an admin, add them to that group in
-Keycloak's console; to revoke it, remove them (takes effect on their next
-login, since sessions are stateless JWTs). There's deliberately no
-"manage admins" page in this app.
+`isAdmin` is synced automatically from the Keycloak group named in
+`KEYCLOAK_ADMIN_GROUP` (default `admin`) on every login (`lib/auth.ts`) —
+to make someone an admin, add them to that group in Keycloak's console; to
+revoke it, remove them (takes effect on their next login, since sessions
+are stateless JWTs). There's deliberately no "manage admins" page in this
+app. If you change `KEYCLOAK_ADMIN_GROUP`, rename or recreate the matching
+group in Keycloak too — the two aren't linked automatically.
 
 This depends on a group-membership protocol mapper on the client, which
 `kcadm` needs to create (there's no console UI step for this — it's a

@@ -20,6 +20,10 @@ services:
       KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8090}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-find-my-game-parts}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      # Keycloak group whose members get isAdmin — must match an actual
+      # group in Keycloak's console (README: "Admins are managed via
+      # Keycloak groups").
+      KEYCLOAK_ADMIN_GROUP: ${KEYCLOAK_ADMIN_GROUP:-admin}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       BGG_API_BASE: https://boardgamegeek.com/xmlapi2
     volumes:

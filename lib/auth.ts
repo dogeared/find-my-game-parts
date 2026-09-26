@@ -37,6 +37,7 @@ import { prisma } from "@/lib/prisma";
 const keycloakRealm = process.env.KEYCLOAK_REALM ?? "find-my-game-parts";
 const keycloakInternalBase = `${process.env.KEYCLOAK_ISSUER}`; // already includes /realms/{realm}
 const keycloakPublicBase = `${process.env.KEYCLOAK_PUBLIC_URL}/realms/${keycloakRealm}`;
+const keycloakAdminGroup = process.env.KEYCLOAK_ADMIN_GROUP ?? "admin";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -68,7 +69,7 @@ export const authOptions: NextAuthOptions = {
           id: profile.sub,
           email: profile.email,
           name: profile.name ?? profile.preferred_username,
-          isAdmin: groups.includes("admin"),
+          isAdmin: groups.includes(keycloakAdminGroup),
         };
       },
     },
