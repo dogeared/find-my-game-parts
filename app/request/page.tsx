@@ -7,11 +7,13 @@ import type { BggSearchResult } from "@/lib/bgg";
 
 // BGG's XML API now requires a registered, approved token (bgg.ts returns
 // an empty result for every search until BGG_API_TOKEN exists — see the
-// Dependencies section of the design doc). Until that's approved, gating
-// submission on a REAL BGG match would block every request. Flip this back
-// to `true` once BGG_API_TOKEN is set and bgg.ts sends it — that's the only
-// change needed here; the validity/tooltip logic below already branches on it.
-const REQUIRE_BGG_MATCH = false;
+// Dependencies section of the design doc). Every search currently returns
+// nothing, so: no search-as-you-type dropdown, no "no match found" message
+// (would fire on literally every keystroke, even for well-known games) —
+// just a plain freeform field. Flip this back to `true` once BGG_API_TOKEN
+// is set and bgg.ts sends it; both the search UI below and the submission
+// gate already branch on this single flag.
+const BGG_SEARCH_AVAILABLE = false;
 
 function RequestForm() {
   const { data: session, status } = useSession();
@@ -48,15 +50,15 @@ function RequestForm() {
     }
   }
 
-  const isGameChosen = REQUIRE_BGG_MATCH ? Boolean(bggId) : Boolean(gameTitle.trim());
+  const isGameChosen = BGG_SEARCH_AVAILABLE ? Boolean(bggId) : Boolean(gameTitle.trim());
   const isQuantityValid = Number.isFinite(quantity) && quantity >= 1;
   const isPartDescriptionValid = Boolean(partDescription.trim());
   const isFormValid = isGameChosen && isPartDescriptionValid && isQuantityValid;
 
   const disabledReason = !isGameChosen
-    ? REQUIRE_BGG_MATCH
+    ? BGG_SEARCH_AVAILABLE
       ? "Select a game from the BGG search results to continue"
-      : "Enter or select a game to continue"
+      : "Enter a game to continue"
     : !isPartDescriptionValid
       ? "Describe the part you need to continue"
       : !isQuantityValid
@@ -124,39 +126,57 @@ function RequestForm() {
 
       <div className="field">
         <label>Game (required)</label>
-        <input
-          type="text"
-          value={gameQuery}
-          onChange={(e) => searchGames(e.target.value)}
-          placeholder="Start typing a title…"
-        />
-        {gameResults.length > 0 && (
-          <ul>
-            {gameResults.map((r) => (
-              <li key={r.bggId}>
-                <button
-                  className="btn-ghost"
-                  onClick={() => {
-                    setGameId(null);
-                    setBggId(r.bggId);
-                    setGameTitle(r.title);
-                    setGameQuery(r.title);
-                    setGameResults([]);
-                  }}
-                >
-                  {r.title}
+        {BGG_SEARCH_AVAILABLE ? (
+          <>
+            <input
+              type="text"
+              value={gameQuery}
+              onChange={(e) => searchGames(e.target.value)}
+              placeholder="Start typing a title…"
+            />
+            {gameResults.length > 0 && (
+              <ul>
+                {gameResults.map((r) => (
+                  <li key={r.bggId}>
+                    <button
+                      className="btn-ghost"
+                      onClick={() => {
+                        setGameId(null);
+                        setBggId(r.bggId);
+                        setGameTitle(r.title);
+                        setGameQuery(r.title);
+                        setGameResults([]);
+                      }}
+                    >
+                      {r.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {gameResults.length === 0 && gameQuery.trim().length >= 2 && !gameId && !bggId && (
+              <p>
+                No match found —{" "}
+                <button className="btn-ghost" onClick={() => setGameTitle(gameQuery)}>
+                  use &quot;{gameQuery}&quot; anyway
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {gameResults.length === 0 && gameQuery.trim().length >= 2 && !gameId && !bggId && (
-          <p>
-            No match found —{" "}
-            <button className="btn-ghost" onClick={() => setGameTitle(gameQuery)}>
-              use &quot;{gameQuery}&quot; anyway
-            </button>
-          </p>
+              </p>
+            )}
+          </>
+        ) : (
+          // BGG search is down (see BGG_SEARCH_AVAILABLE above) — plain
+          // freeform input, no search call, no messaging of any kind.
+          <input
+            type="text"
+            value={gameTitle}
+            onChange={(e) => {
+              setGameId(null);
+              setBggId(null);
+              setGameQuery(e.target.value);
+              setGameTitle(e.target.value);
+            }}
+            placeholder="Type a game title…"
+          />
         )}
       </div>
 
