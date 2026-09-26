@@ -228,14 +228,13 @@ function RequestForm() {
         />
       </div>
 
-      {error && <p style={{ color: "var(--accent)" }}>{error}</p>}
+      {error && <p className="error-text">{error}</p>}
 
       <button
         className="btn"
         onClick={submit}
         disabled={!isFormValid}
         title={disabledReason || undefined}
-        style={!isFormValid ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
       >
         Send request →
       </button>

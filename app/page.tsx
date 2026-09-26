@@ -15,11 +15,11 @@ export default async function HomePage() {
   });
 
   return (
-    <main className="panel" style={{ textAlign: "center" }}>
+    <main className="panel panel-centered">
       <h1>FIND MY GAME · PARTS</h1>
       <p>missing a piece? We may have it. Or, we can get it.</p>
 
-      <div className="panel" style={{ borderStyle: "dashed" }}>
+      <div className="panel panel-dashed">
         <b>Don&apos;t see your game?</b> Let me know if there&apos;s a game you need
         parts for, even if I don&apos;t currently have it available. If enough
         people need parts, I&apos;ll get it.

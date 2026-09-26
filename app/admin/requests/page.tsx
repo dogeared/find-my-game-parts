@@ -83,7 +83,7 @@ export default function AdminRequestsPage() {
       <h2>Triage requests</h2>
 
       {nudge && (
-        <div className="panel" style={{ borderStyle: "dashed" }}>
+        <div className="panel panel-dashed">
           <b>You just approved a request.</b> Other pending requests for the same game —
           check if any of these are for the same physical part:
           <ul>
@@ -106,7 +106,7 @@ export default function AdminRequestsPage() {
         <div key={gameId} className="panel">
           <h3>{title}</h3>
           {items.map((r) => (
-            <div key={r.id} className="game-row" style={{ flexDirection: "column" }}>
+            <div key={r.id} className="game-row game-row--stacked">
               <div>
                 <b>{r.partDescription}</b> (qty {r.quantity})
                 {r.editionNote && <span> — {r.editionNote}</span>}
