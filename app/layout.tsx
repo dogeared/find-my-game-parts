@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AccessibilityToggle } from "@/components/AccessibilityToggle";
+import { NavAuth } from "@/components/NavAuth";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 import { ThemePicker } from "@/components/ThemePicker";
 import "./globals.css";
@@ -16,8 +17,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SessionProviderWrapper>
           <div className="topbar">
-            <ThemePicker />
-            <AccessibilityToggle />
+            <nav className="topbar-nav">
+              <NavAuth />
+            </nav>
+            <div className="topbar-utility">
+              <ThemePicker />
+              <AccessibilityToggle />
+            </div>
           </div>
           {children}
         </SessionProviderWrapper>
