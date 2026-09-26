@@ -198,6 +198,11 @@ a {
   color: var(--ink);
 }
 
+.field input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .game-row {
   display: flex;
   align-items: center;

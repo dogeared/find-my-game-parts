@@ -24,6 +24,12 @@ function RequestForm() {
   // effect (react-hooks/set-state-in-effect: deriving state from props on
   // mount belongs in the initializer, not a useEffect).
   const [gameId, setGameId] = useState<string | null>(() => searchParams.get("gameId"));
+  // Arriving with a real gameId means the buyer picked an existing
+  // inventory game, not typed one freehand — lock it so it can't be edited
+  // into a near-duplicate freeform title (e.g. "Catan" vs "catan " vs
+  // "CATAN"), which would otherwise fragment demand across records for the
+  // same game. Fixed at mount; the prefill only ever happens once.
+  const [gameLocked] = useState(() => Boolean(searchParams.get("gameId")));
   const [bggId, setBggId] = useState<string | null>(null);
   const [gameQuery, setGameQuery] = useState(() => searchParams.get("title") ?? "");
   const [gameTitle, setGameTitle] = useState(() => searchParams.get("title") ?? "");
@@ -126,7 +132,9 @@ function RequestForm() {
 
       <div className="field">
         <label>Game (required)</label>
-        {BGG_SEARCH_AVAILABLE ? (
+        {gameLocked ? (
+          <input type="text" value={gameTitle} disabled readOnly title="Selected from inventory — not editable" />
+        ) : BGG_SEARCH_AVAILABLE ? (
           <>
             <input
               type="text"
