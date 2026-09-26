@@ -140,17 +140,30 @@ a {
   cursor: pointer;
 }
 
-.btn {
+/* Shared base for both variants, so `.btn-ghost` alone (no `.btn`) is
+   still fully styled — 9 of 13 call sites in the app use it that way, and
+   relying on default browser button styling for those is exactly what
+   made the Sign In button unreadable in high-contrast mode (default black
+   button text on a black background). */
+.btn,
+.btn-ghost {
   font-family: inherit;
   font-size: 15px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 12px 18px;
-  background: var(--accent);
   color: var(--ink);
   border: 3px solid var(--border);
   box-shadow: 4px 4px 0 var(--border);
   cursor: pointer;
+}
+
+.btn {
+  background: var(--accent);
+}
+
+.btn-ghost {
+  background: var(--bg);
 }
 
 /* Mono's accent equals its ink color, and high-contrast's yellow accent
@@ -160,10 +173,6 @@ a {
 [data-a11y="on"] .btn {
   background: var(--bg);
   color: var(--ink);
-}
-
-.btn-ghost {
-  background: var(--bg);
 }
 
 .panel {
