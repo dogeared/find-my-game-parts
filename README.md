@@ -248,22 +248,27 @@ hostname for this project without touching the other project's realm:
 - **Cloudflare Tunnel**: add `auth.findmygame.parts` (or whatever hostname
   you're using) as another public hostname, routed to the same local
   Keycloak service the other project already uses.
-- **Keycloak**: set `KC_HOSTNAME_STRICT=false` **and** `KC_PROXY_HEADERS=forwarded`
-  (both set in `keycloak/Dockerfile`). This combination is Keycloak's own
-  documented "Fully dynamic URLs" mode (confirmed against
-  keycloak.org/server/hostname) — every endpoint resolves its hostname
-  per-request from the incoming request. **`KC_PROXY_HEADERS=xforwarded`
-  is NOT enough** — that's Keycloak's "Partially dynamic" mode: only
-  scheme/port/context-path resolve per-request, while the hostname itself
-  stays statically defined. That gap caused a real bug: the initial
-  login redirect looked fine (the app itself sends the browser to the
-  right host), but Keycloak's own follow-up links (e.g.
-  `login-actions/authenticate`) fell back to a different realm's fixed
-  hostname, breaking the session cookie across origins ("we're sorry,
-  cookie not found"). With `forwarded`, each realm's issuer — and every
-  link Keycloak generates mid-flow — correctly matches whichever hostname
-  it was actually reached on; the other project's realm keeps working
-  exactly as before.
+- **Keycloak**: set `KC_HOSTNAME_STRICT=false` and remove any fixed
+  `KC_HOSTNAME`/`--hostname` value entirely — do not set it to anything,
+  not even the instance's "main" hostname. A fixed hostname is what
+  actually caused a real bug hit live: the initial login redirect looked
+  fine (the app itself sends the browser to the right host), but
+  Keycloak's own follow-up links (e.g. `login-actions/authenticate`)
+  fell back to the fixed hostname instead of the one the flow started
+  on — a different origin, so the session cookie wasn't sent, surfacing
+  as "we're sorry, cookie not found".
+  Use `KC_PROXY_HEADERS=xforwarded`, not `forwarded` — confirmed live via
+  Keycloak's own `/realms/master/hostname-debug` page that Cloudflare
+  Tunnel never sends the standard RFC 7239 `Forwarded` header at all,
+  only the legacy `X-Forwarded-*` ones. Setting `proxy-headers=forwarded`
+  made Keycloak ignore the correct `X-Forwarded-Proto: https` it was
+  receiving (wrong header family) and fall back to reporting `http` in
+  every generated URL instead. With `hostname-strict=false` + no fixed
+  hostname + `proxy-headers=xforwarded` matching what Cloudflare Tunnel
+  actually sends, every link Keycloak generates mid-flow — and each
+  realm's issuer scheme — correctly matches whichever hostname (and
+  `https`) the request actually came in on; the other project's realm
+  keeps working exactly as before.
 
 ### 5. Set the `sync: false` environment variables
 

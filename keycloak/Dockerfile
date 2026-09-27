@@ -22,22 +22,28 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 # terminate TLS at the edge and forward plain HTTP — hence http-enabled,
 # rather than Keycloak terminating its own HTTPS.
 #
-# proxy-headers=forwarded + hostname-strict=false is Keycloak's own
-# documented "Fully dynamic URLs" recipe (confirmed against
-# keycloak.org/server/hostname) — required for serving more than one
-# public hostname/realm off a single instance, which is the actual
-# deployment shape now (see README's "Production deployment"). The more
-# obvious-looking proxy-headers=xforwarded is documented as "Partially
-# dynamic": only scheme/port/context-path resolve per-request, while the
-# hostname itself stays statically defined — a real bug hit live: the
-# initial redirect looked fine (the app already sends the browser to the
-# right host), but Keycloak's own follow-up links (e.g.
-# login-actions/authenticate) fell back to a different realm's fixed
-# hostname, breaking the session cookie across origins ("we're sorry,
-# cookie not found"). No KC_HOSTNAME is set here on purpose — fully
-# dynamic mode derives it per-request instead.
+# hostname-strict=false + no KC_HOSTNAME set is what actually gives fully
+# dynamic per-request hostname resolution — needed for serving more than
+# one public hostname/realm off a single instance, which is the actual
+# deployment shape now (see README's "Production deployment"). A fixed
+# KC_HOSTNAME caused a real bug hit live: the initial redirect looked
+# fine (the app already sends the browser to the right host), but
+# Keycloak's own follow-up links (e.g. login-actions/authenticate) fell
+# back to a different realm's fixed hostname, breaking the session
+# cookie across origins ("we're sorry, cookie not found").
+#
+# proxy-headers=xforwarded, not forwarded: Keycloak's docs describe
+# xforwarded as only partially dynamic when paired with a fixed
+# --hostname (which is what actually caused the bug above, not the
+# header format itself) — confirmed live via Keycloak's own
+# /realms/master/hostname-debug page that Cloudflare Tunnel never sends
+# the standard RFC 7239 `Forwarded` header at all, only the legacy
+# X-Forwarded-* ones (Host, X-Forwarded-For, X-Forwarded-Proto). Setting
+# proxy-headers=forwarded here made Keycloak ignore the correct
+# X-Forwarded-Proto: https it was receiving and fall back to scheme=http
+# instead, since it was looking for a header format that never arrives.
 ENV KC_HOSTNAME_STRICT=false
-ENV KC_PROXY_HEADERS=forwarded
+ENV KC_PROXY_HEADERS=xforwarded
 ENV KC_HTTP_ENABLED=true
 
 # Production mode defaults --cache to 'ispn', clustering via JGroups/
