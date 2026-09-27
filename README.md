@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/github/package-json/v/dogeared/find-my-game-parts)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 
 Concierge MVP for sourcing replacement board game parts. Full design context: [`docs/designs/find-my-game-parts.md`](docs/designs/find-my-game-parts.md).
