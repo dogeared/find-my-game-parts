@@ -21,6 +21,12 @@ CMD ["sh", "-c", "npx prisma generate && npm run dev"]
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# prisma generate only reads schema.prisma, it never connects — this
+# placeholder just satisfies prisma.config.ts's env("DATABASE_URL")
+# lookup at build time (mirrors .github/workflows/ci.yml). The real
+# DATABASE_URL is a runtime env var, not a build arg — never wired
+# through here, since Docker build args get baked into image history.
+ENV DATABASE_URL=postgresql://user:password@localhost:5432/placeholder
 RUN npx prisma generate
 RUN npm run build
 
@@ -34,7 +40,8 @@ RUN npm install --omit=dev
 
 FROM base AS production
 ENV NODE_ENV=production
-COPY --from=build /app/public ./public
+# No public/ dir exists in this repo yet (no static assets) — add this
+# COPY back if one gets added later.
 COPY --from=build /app/.next ./.next
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma

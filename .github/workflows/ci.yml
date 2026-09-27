@@ -56,3 +56,29 @@ jobs:
       - run: snyk code test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  tag-release:
+    name: Tag release
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      # Idempotent: tags `vX.Y.Z` from package.json's current version, but
+      # only if that tag doesn't already exist on origin — so re-running
+      # this workflow, or pushing to main without a version bump, is a
+      # no-op rather than a duplicate/failing tag push.
+      - name: Tag version if new
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" > /dev/null; then
+            echo "Tag $VERSION already exists, skipping."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "$VERSION"
+          fi
