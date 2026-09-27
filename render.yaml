@@ -65,6 +65,13 @@ services:
     dockerContext: ./keycloak
     plan: starter
     envVars:
+      # Without this, Render assumes port 10000 until it observes the
+      # real bound port, then restarts its proxy/networking layer mid-
+      # deploy ("New primary port detected: 8080. Restarting deploy...",
+      # seen in an earlier failed deploy's logs). Set explicitly to skip
+      # that detection-and-restart cycle entirely.
+      - key: PORT
+        value: "8080"
       - key: KC_DB
         value: postgres
       # Render's Postgres `fromDatabase` only exposes connectionString,
