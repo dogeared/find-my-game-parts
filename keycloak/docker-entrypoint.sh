@@ -18,4 +18,6 @@ case "$KC_DB_URL" in
     ;;
 esac
 
+echo "DEBUG entrypoint: KC_DB_URL=[$KC_DB_URL] KC_DB_USERNAME=[$KC_DB_USERNAME] KC_DB_PASSWORD_LEN=${#KC_DB_PASSWORD}"
+
 exec /opt/keycloak/bin/kc.sh "$@"
