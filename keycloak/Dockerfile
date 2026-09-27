@@ -27,5 +27,10 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 ENV KC_PROXY_HEADERS=xforwarded
 ENV KC_HTTP_ENABLED=true
 
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+COPY docker-entrypoint.sh /opt/keycloak/bin/docker-entrypoint.sh
+USER root
+RUN chmod +x /opt/keycloak/bin/docker-entrypoint.sh
+USER keycloak
+
+ENTRYPOINT ["/opt/keycloak/bin/docker-entrypoint.sh"]
 CMD ["start", "--optimized"]

@@ -67,10 +67,26 @@ services:
     envVars:
       - key: KC_DB
         value: postgres
+      # Render's Postgres `fromDatabase` only exposes connectionString,
+      # connectionPoolString, user, password, and database — never a
+      # JDBC-shaped URL or bare host/port. KC_DB_URL below is the raw
+      # connectionString (postgresql://user:pass@host/db); the image's
+      # docker-entrypoint.sh rewrites it into the jdbc:postgresql://
+      # form Keycloak's driver actually accepts, stripping the embedded
+      # credentials since KC_DB_USERNAME/KC_DB_PASSWORD carry those
+      # separately instead.
       - key: KC_DB_URL
         fromDatabase:
           name: find-my-game-parts-keycloak-db
           property: connectionString
+      - key: KC_DB_USERNAME
+        fromDatabase:
+          name: find-my-game-parts-keycloak-db
+          property: user
+      - key: KC_DB_PASSWORD
+        fromDatabase:
+          name: find-my-game-parts-keycloak-db
+          property: password
       - key: KC_BOOTSTRAP_ADMIN_USERNAME
         sync: false
       - key: KC_BOOTSTRAP_ADMIN_PASSWORD
