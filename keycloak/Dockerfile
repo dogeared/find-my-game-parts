@@ -18,13 +18,26 @@ RUN /opt/keycloak/bin/kc.sh build
 FROM quay.io/keycloak/keycloak:26.4
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
-# Render (and most PaaS load balancers) terminate TLS at the edge and
-# forward plain HTTP with X-Forwarded-* headers — hence http-enabled plus
-# trusting xforwarded headers, rather than Keycloak terminating its own
-# HTTPS. KC_HOSTNAME must be set at runtime to the real public URL (see
-# render.yaml) — hostname-strict defaults to true in production and
-# requires it.
-ENV KC_PROXY_HEADERS=xforwarded
+# Reverse proxies (Render, Cloudflare Tunnel, most PaaS load balancers)
+# terminate TLS at the edge and forward plain HTTP — hence http-enabled,
+# rather than Keycloak terminating its own HTTPS.
+#
+# proxy-headers=forwarded + hostname-strict=false is Keycloak's own
+# documented "Fully dynamic URLs" recipe (confirmed against
+# keycloak.org/server/hostname) — required for serving more than one
+# public hostname/realm off a single instance, which is the actual
+# deployment shape now (see README's "Production deployment"). The more
+# obvious-looking proxy-headers=xforwarded is documented as "Partially
+# dynamic": only scheme/port/context-path resolve per-request, while the
+# hostname itself stays statically defined — a real bug hit live: the
+# initial redirect looked fine (the app already sends the browser to the
+# right host), but Keycloak's own follow-up links (e.g.
+# login-actions/authenticate) fell back to a different realm's fixed
+# hostname, breaking the session cookie across origins ("we're sorry,
+# cookie not found"). No KC_HOSTNAME is set here on purpose — fully
+# dynamic mode derives it per-request instead.
+ENV KC_HOSTNAME_STRICT=false
+ENV KC_PROXY_HEADERS=forwarded
 ENV KC_HTTP_ENABLED=true
 
 # Production mode defaults --cache to 'ispn', clustering via JGroups/

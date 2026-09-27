@@ -248,14 +248,21 @@ hostname for this project without touching the other project's realm:
 - **Cloudflare Tunnel**: add `auth.findmygame.parts` (or whatever hostname
   you're using) as another public hostname, routed to the same local
   Keycloak service the other project already uses.
-- **Keycloak**: set `KC_HOSTNAME_STRICT=false` (confirmed via this exact
-  image's `kc.sh start --help-all`: disables resolving a single fixed
-  hostname, and instead resolves it dynamically per-request from the
-  incoming Host header). This requires `KC_PROXY_HEADERS=xforwarded` to
-  already be set (it is, in `keycloak/Dockerfile`) so Keycloak trusts the
-  forwarded Host header from the tunnel rather than trusting a raw one.
-  With this, each realm's issuer correctly matches whichever hostname it
-  was actually reached on — the other project's realm keeps working
+- **Keycloak**: set `KC_HOSTNAME_STRICT=false` **and** `KC_PROXY_HEADERS=forwarded`
+  (both set in `keycloak/Dockerfile`). This combination is Keycloak's own
+  documented "Fully dynamic URLs" mode (confirmed against
+  keycloak.org/server/hostname) — every endpoint resolves its hostname
+  per-request from the incoming request. **`KC_PROXY_HEADERS=xforwarded`
+  is NOT enough** — that's Keycloak's "Partially dynamic" mode: only
+  scheme/port/context-path resolve per-request, while the hostname itself
+  stays statically defined. That gap caused a real bug: the initial
+  login redirect looked fine (the app itself sends the browser to the
+  right host), but Keycloak's own follow-up links (e.g.
+  `login-actions/authenticate`) fell back to a different realm's fixed
+  hostname, breaking the session cookie across origins ("we're sorry,
+  cookie not found"). With `forwarded`, each realm's issuer — and every
+  link Keycloak generates mid-flow — correctly matches whichever hostname
+  it was actually reached on; the other project's realm keeps working
   exactly as before.
 
 ### 5. Set the `sync: false` environment variables
