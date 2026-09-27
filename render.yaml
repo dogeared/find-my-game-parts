@@ -23,6 +23,13 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: starter
+    # Runs after the image builds but before the new instance starts
+    # serving traffic — applies pending migrations automatically on every
+    # deploy. Added after a real deploy went live with the schema never
+    # applied at all (a one-off manual step that's easy to forget); the
+    # image now includes the `prisma` CLI + prisma.config.ts specifically
+    # so this works (see Dockerfile).
+    preDeployCommand: npx prisma migrate deploy
     envVars:
       - key: DATABASE_URL
         fromDatabase:

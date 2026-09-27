@@ -296,13 +296,15 @@ real users, add admins to the `admin` group, and set up Google/Facebook
 as identity providers with production redirect URIs (same steps as local
 dev, above) — scoped to this realm only.
 
-### 7. Run database migrations
+### 7. Database migrations run automatically
 
-One-off job against the app's database (Render dashboard → the app
-service → **Shell**, or `render ssh`):
+`render.yaml`'s `preDeployCommand` runs `npx prisma migrate deploy` before
+every deploy starts serving traffic — no manual step needed. If you ever
+need to run it by hand (e.g. troubleshooting), it's a one-off job against
+the app's database:
 
 ```bash
-npx prisma migrate deploy
+render jobs create <app-service-id> --start-command "npx prisma migrate deploy"
 ```
 
 ### 8. CI/CD
