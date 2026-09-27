@@ -33,6 +33,12 @@ jobs:
   security:
     name: Snyk
     runs-on: ubuntu-latest
+    # Backstop for the whole job — hit live: `snyk test` hung indefinitely
+    # in this exact job (quota-exhausted service account token seemingly
+    # handled differently than an interactive session, which just prints
+    # a warning and exits normally) and had to be cancelled by hand.
+    # Every observed successful run finishes in well under a minute.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
 
@@ -50,10 +56,12 @@ jobs:
       - uses: snyk/actions/setup@master
 
       - run: snyk test
+        timeout-minutes: 3
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - run: snyk code test
+        timeout-minutes: 3
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
