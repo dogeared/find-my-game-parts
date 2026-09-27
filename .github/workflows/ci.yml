@@ -37,8 +37,11 @@ jobs:
     # in this exact job (quota-exhausted service account token seemingly
     # handled differently than an interactive session, which just prints
     # a warning and exits normally) and had to be cancelled by hand.
-    # Every observed successful run finishes in well under a minute.
-    timeout-minutes: 10
+    # Every observed successful run finishes in well under a minute, but
+    # a first run right after enabling Snyk Code on a new org can take
+    # longer (backend indexing) — sized to comfortably fit both 5-minute
+    # per-step timeouts below plus checkout/setup/npm ci overhead.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
 
@@ -56,12 +59,12 @@ jobs:
       - uses: snyk/actions/setup@master
 
       - run: snyk test
-        timeout-minutes: 3
+        timeout-minutes: 5
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - run: snyk code test
-        timeout-minutes: 3
+        timeout-minutes: 5
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
