@@ -35,6 +35,16 @@ ENV KC_HTTP_ENABLED=true
 # failures in the logs). 'local' disables clustering entirely.
 ENV KC_CACHE=local
 
+# Still OOM'd on the starter plan's 512Mi even with clustering disabled —
+# kc.sh's own container-aware default (JAVA_OPTS_KC_HEAP, confirmed by
+# reading kc.sh/kc.bat directly) sizes the heap to 70% of detected
+# container memory, plus a 256m metaspace cap from its other JAVA_OPTS
+# default — 70% of 512Mi alone is already ~358Mi, and 358Mi heap + 256Mi
+# metaspace exceeds 512Mi before counting thread stacks or native/off-heap
+# memory. Cut both explicitly, leaving headroom for that overhead.
+ENV JAVA_OPTS_KC_HEAP="-XX:MaxRAMPercentage=50 -XX:MinRAMPercentage=50 -XX:InitialRAMPercentage=35"
+ENV JAVA_OPTS_APPEND="-XX:MaxMetaspaceSize=128m -XX:MetaspaceSize=64m"
+
 COPY docker-entrypoint.sh /opt/keycloak/bin/docker-entrypoint.sh
 USER root
 RUN chmod +x /opt/keycloak/bin/docker-entrypoint.sh
