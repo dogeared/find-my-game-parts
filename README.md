@@ -181,6 +181,50 @@ into a built image, if you ever deploy a dedicated Keycloak instance
 instead of a shared self-hosted one — it's not part of the current
 deploy path.
 
+## Email verification
+
+Optional — Keycloak requires new accounts to verify their email address
+before finishing sign-in, using any standard SMTP relay (e.g.
+[Mailjet](https://www.mailjet.com), which has a free tier generous enough
+for an early-stage app). Entirely Keycloak-hosted: no app code involved,
+same as self-registration above — Keycloak's login flow intercepts an
+unverified user right after their credentials are accepted and forces
+them through verification before completing the OAuth handshake, so
+NextAuth never even sees an unverified session.
+
+Configure it by passing SMTP settings to `keycloak/setup-realm.sh`:
+
+```bash
+SMTP_HOST=smtp-relay.mailjet.com \
+SMTP_PORT=587 \
+SMTP_FROM=no-reply@findmygame.parts \
+SMTP_USER=<your-mailjet-api-key> \
+SMTP_PASSWORD=<your-mailjet-secret-key> \
+  sh -c "$(cat keycloak/setup-realm.sh)"
+```
+
+If `SMTP_HOST` is left unset, the script skips SMTP configuration and
+`verifyEmail` entirely — this is the local dev default, so registering
+locally keeps working with no real email account needed. Only set these
+against an instance you actually want sending real verification emails.
+
+**Note:** Keycloak's `smtpServer` realm setting only accepts a single
+JSON object (`-s 'smtpServer={"host":"...", ...}'`) — per-field
+dot-notation (`-s smtpServer.host=...`) silently no-ops here, confirmed
+live by setting it that way and finding the realm's `smtpServer` still
+empty afterward, even though `kcadm`'s own docs describe dot-notation as
+generally supported for nested attributes. All values must be strings,
+including `port`/`auth`/`starttls`/`ssl` — Keycloak's schema is
+`Map<String,String>`, so a bare number or boolean is a type mismatch,
+not just a style choice. `keycloak/setup-realm.sh` already handles this
+correctly; only worth knowing if you ever configure SMTP by hand.
+
+The "check your email" interstitial page inherits the custom theme
+automatically (same broad `keycloak.v2` extension as everything else),
+but the actual **email message content** uses Keycloak's default
+template look unless you also build an `email` theme — a nice-to-have,
+not required for this to work.
+
 ## Production deployment
 
 The app + its own Postgres deploy to Render via `render.yaml` (this
@@ -342,6 +386,11 @@ docker run --rm -v "$PWD":/app -w /app node:22-slim npx eslint .
   `docs/designs/find-my-game-parts.md`'s Implementation Tasks.
 - Auth is wired as a generic OIDC client against Keycloak — the Keycloak
   realm/client and Google/Facebook federation are not created yet (see above).
+  Self-registration and optional email verification (SMTP) are supported
+  via `keycloak/setup-realm.sh` — see "Email verification" above.
 - Email notifications use Resend — needs a real `RESEND_API_KEY` in `.env`.
+  (Separate from Keycloak's own SMTP config for email verification above
+  — two different providers for two different purposes is intentional,
+  not a leftover.)
 - Deployment: app + database on Render (`render.yaml`), Keycloak
   self-hosted separately (see "Production deployment").
