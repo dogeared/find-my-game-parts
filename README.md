@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-0.4.1-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.4.2-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 
 Concierge MVP for sourcing replacement board game parts. Full design context: [`docs/designs/find-my-game-parts.md`](docs/designs/find-my-game-parts.md).
@@ -224,6 +224,19 @@ automatically (same broad `keycloak.v2` extension as everything else),
 but the actual **email message content** uses Keycloak's default
 template look unless you also build an `email` theme — a nice-to-have,
 not required for this to work.
+
+**Clicking the verification link from a different session** (e.g.
+checking email on a different device/app than where you registered —
+the common case, since Keycloak can't resume the original login flow
+without its original session cookie) lands on a plain "Your email
+address has been verified" page. `setup-realm.sh` sets the client's
+`baseUrl` (Keycloak's "Home URL" field) specifically so this page shows
+a "« Back to Application" link — Keycloak's own default `info.ftl`
+template falls back to `client.baseUrl` for this automatically, no
+theme changes needed. Confirmed live: registered a real test user,
+clicked the actual emailed link cold (no session), and compared the
+resulting page with and without `baseUrl` set — no link at all without
+it, "« Back to Application" with it.
 
 ## Production deployment
 

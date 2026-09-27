@@ -100,14 +100,30 @@ CLIENT_UUID=$($KCADM create clients -r "$REALM" -i \
   -s protocol=openid-connect \
   -s redirectUris="[\"$REDIRECT_URI\"]" \
   -s webOrigins="[\"$APP_PUBLIC_URL\"]" \
+  -s baseUrl="$APP_PUBLIC_URL" \
   -s standardFlowEnabled=true \
   -s directAccessGrantsEnabled=false 2>/dev/null) || \
   CLIENT_UUID=$($KCADM get clients -r "$REALM" -q clientId="$CLIENT_ID" --fields id --format csv --noquotes | tail -1)
 echo "   client id: $CLIENT_UUID"
 
 # Idempotent even if the client already existed as confidential from
-# before this script switched to publicClient=true.
-$KCADM update clients/"$CLIENT_UUID" -r "$REALM" -s publicClient=true
+# before this script switched to publicClient=true, or from before
+# baseUrl was added below.
+#
+# baseUrl (Keycloak's "Home URL" client field) is what Keycloak's own
+# default info.ftl template falls back to for the "Back to Application"
+# link on one-off pages like the post-email-verification confirmation —
+# confirmed by reading that template directly, and live end-to-end by
+# registering a real test user, clicking the actual emailed verification
+# link, and observing the resulting page: with no baseUrl set, "Your
+# email address has been verified." rendered with no link or CTA at
+# all; with baseUrl set, the exact same page adds "« Back to
+# Application" pointing at it. This only matters when the link is
+# opened in a session with no active pending login flow to resume
+# (which auto-completes instead, skipping this page entirely) — the
+# common case of checking email in a different tab/app than where you
+# registered.
+$KCADM update clients/"$CLIENT_UUID" -r "$REALM" -s publicClient=true -s baseUrl="$APP_PUBLIC_URL"
 
 echo "== Adding the group-membership protocol mapper (no console UI for this) =="
 $KCADM create clients/"$CLIENT_UUID"/protocol-mappers/models -r "$REALM" \
