@@ -26,10 +26,15 @@ services:
     # Runs after the image builds but before the new instance starts
     # serving traffic — applies pending migrations automatically on every
     # deploy. Added after a real deploy went live with the schema never
-    # applied at all (a one-off manual step that's easy to forget); the
-    # image now includes the `prisma` CLI + prisma.config.ts specifically
-    # so this works (see Dockerfile).
-    preDeployCommand: npx prisma migrate deploy
+    # applied at all (a one-off manual step that's easy to forget).
+    #
+    # `prisma` (the CLI) is deliberately NOT a production dependency — its
+    # own dependency tree includes mysql2/deepmerge-ts, which carry real
+    # Snyk-flagged high-severity findings we don't want in the production
+    # tree for a Postgres-only app. `npx --yes prisma@7.10.0` fetches the
+    # exact same pinned version used everywhere else in this repo, fresh,
+    # each deploy, without ever touching package.json/package-lock.json.
+    preDeployCommand: npx --yes prisma@7.10.0 migrate deploy
     envVars:
       - key: DATABASE_URL
         fromDatabase:

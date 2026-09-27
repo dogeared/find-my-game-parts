@@ -298,13 +298,12 @@ dev, above) — scoped to this realm only.
 
 ### 7. Database migrations run automatically
 
-`render.yaml`'s `preDeployCommand` runs `npx prisma migrate deploy` before
-every deploy starts serving traffic — no manual step needed. If you ever
-need to run it by hand (e.g. troubleshooting), it's a one-off job against
-the app's database:
+`render.yaml`'s `preDeployCommand` runs this before every deploy starts
+serving traffic — no manual step needed. If you ever need to run it by
+hand (e.g. troubleshooting), it's a one-off job against the app's database:
 
 ```bash
-render jobs create <app-service-id> --start-command "npx prisma migrate deploy"
+render jobs create <app-service-id> --start-command "npx --yes prisma@7.10.0 migrate deploy"
 ```
 
 ### 8. CI/CD
