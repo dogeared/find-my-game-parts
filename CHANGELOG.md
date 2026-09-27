@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-09-27
+
+### Changed
+- Temporarily removed the Snyk job from CI — `snyk code test` hung
+  indefinitely more than once (quota exhaustion, then an org-level Snyk
+  Code enablement gap), and even with per-step timeouts as a backstop
+  the timing is still unreliable enough to pull out of required checks
+  for now. Still enforced locally via the `.husky/pre-push` hook; will
+  be re-added once confirmed stable.
+
+[0.4.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.4.1
+
 ## [0.4.0] - 2026-09-27
 
 ### Added
