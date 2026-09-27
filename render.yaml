@@ -57,8 +57,10 @@ services:
         value: find-my-game-parts
       - key: KEYCLOAK_CLIENT_ID
         value: find-my-game-parts
-      - key: KEYCLOAK_CLIENT_SECRET
-        sync: false
+      # No KEYCLOAK_CLIENT_SECRET — the client is public (Authorization
+      # Code + PKCE only, see lib/auth.ts). A confidential client here
+      # makes every login fail with "client_secret_basic client
+      # authentication method requires a client_secret" (hit live).
       - key: KEYCLOAK_ADMIN_GROUP
         value: admin
       - key: RESEND_API_KEY

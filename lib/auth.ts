@@ -47,7 +47,6 @@ export const authOptions: NextAuthOptions = {
       type: "oauth",
       issuer: keycloakPublicBase,
       clientId: process.env.KEYCLOAK_CLIENT_ID,
-      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
       authorization: {
         url: `${keycloakPublicBase}/protocol/openid-connect/auth`,
         params: { scope: "openid email profile" },
@@ -57,6 +56,17 @@ export const authOptions: NextAuthOptions = {
       jwks_endpoint: `${keycloakInternalBase}/protocol/openid-connect/certs`,
       idToken: true,
       checks: ["pkce", "state"],
+      // Public client (Authorization Code + PKCE only, no client secret) —
+      // Keycloak's client has no Credentials tab because it isn't
+      // confidential. Without this, openid-client defaults to
+      // client_secret_basic and every login fails with "client_secret_basic
+      // client authentication method requires a client_secret" (verified
+      // live). Confirmed by reading openid-client's own source
+      // (lib/helpers/client.js's authFor): token_endpoint_auth_method
+      // "none" sends only client_id in the token request body, exactly
+      // matching a public client — PKCE is what proves possession of the
+      // authorization code instead of a shared secret.
+      client: { token_endpoint_auth_method: "none" },
       profile(profile) {
         // Keycloak client has a "groups" protocol mapper (added via kcadm)
         // putting realm group membership directly on the ID token — this
