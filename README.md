@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.3.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 
 Concierge MVP for sourcing replacement board game parts. Full design context: [`docs/designs/find-my-game-parts.md`](docs/designs/find-my-game-parts.md).
@@ -41,8 +41,8 @@ than redoing the console clicks by hand:
 docker compose cp keycloak/setup-realm.sh keycloak:/tmp/setup-realm.sh
 docker compose exec keycloak sh /tmp/setup-realm.sh
 ```
-It prints a new client secret each time it creates the client — update
-`KEYCLOAK_CLIENT_SECRET` in `.env` and `docker compose restart app` after.
+The client it creates is public (Authorization Code + PKCE, no secret) —
+nothing to copy into `.env` afterward.
 
 ### 1. Create the realm and client in Keycloak
 
@@ -64,9 +64,9 @@ It prints a new client secret each time it creates the client — update
 4. Top-left realm dropdown → **Create realm** → name it `find-my-game-parts`.
 5. Left nav → **Clients** → **Create client**:
    - Client ID: `find-my-game-parts` (matches `KEYCLOAK_CLIENT_ID` in `.env.example`)
-   - Client authentication: **On** (a confidential client, so it gets a client secret)
+   - Client authentication: **Off** (a public client — Authorization Code + PKCE, no secret; `lib/auth.ts` sets `token_endpoint_auth_method: "none"` to match)
    - Valid redirect URIs: `http://localhost:3030/api/auth/callback/keycloak`
-6. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
+6. Save — nothing to copy into `.env`, this client has no secret.
 7. **Create a group named after `KEYCLOAK_ADMIN_GROUP`** (defaults to `admin`) and add its members via **Users** → select a user → **Groups** → **Join Group**. Group membership *is* admin status in this app — see "Admins are managed via Keycloak groups" below.
 8. **Realm settings** → **Login** tab → turn on **User registration** — this is what puts a "Register" link on the login page so people can create their own accounts (`setup-realm.sh` does this automatically if you used the fast path instead).
 
@@ -248,15 +248,27 @@ hostname for this project without touching the other project's realm:
 - **Cloudflare Tunnel**: add `auth.findmygame.parts` (or whatever hostname
   you're using) as another public hostname, routed to the same local
   Keycloak service the other project already uses.
-- **Keycloak**: set `KC_HOSTNAME_STRICT=false` (confirmed via this exact
-  image's `kc.sh start --help-all`: disables resolving a single fixed
-  hostname, and instead resolves it dynamically per-request from the
-  incoming Host header). This requires `KC_PROXY_HEADERS=xforwarded` to
-  already be set (it is, in `keycloak/Dockerfile`) so Keycloak trusts the
-  forwarded Host header from the tunnel rather than trusting a raw one.
-  With this, each realm's issuer correctly matches whichever hostname it
-  was actually reached on — the other project's realm keeps working
-  exactly as before.
+- **Keycloak**: set `KC_HOSTNAME_STRICT=false` and remove any fixed
+  `KC_HOSTNAME`/`--hostname` value entirely — do not set it to anything,
+  not even the instance's "main" hostname. A fixed hostname is what
+  actually caused a real bug hit live: the initial login redirect looked
+  fine (the app itself sends the browser to the right host), but
+  Keycloak's own follow-up links (e.g. `login-actions/authenticate`)
+  fell back to the fixed hostname instead of the one the flow started
+  on — a different origin, so the session cookie wasn't sent, surfacing
+  as "we're sorry, cookie not found".
+  Use `KC_PROXY_HEADERS=xforwarded`, not `forwarded` — confirmed live via
+  Keycloak's own `/realms/master/hostname-debug` page that Cloudflare
+  Tunnel never sends the standard RFC 7239 `Forwarded` header at all,
+  only the legacy `X-Forwarded-*` ones. Setting `proxy-headers=forwarded`
+  made Keycloak ignore the correct `X-Forwarded-Proto: https` it was
+  receiving (wrong header family) and fall back to reporting `http` in
+  every generated URL instead. With `hostname-strict=false` + no fixed
+  hostname + `proxy-headers=xforwarded` matching what Cloudflare Tunnel
+  actually sends, every link Keycloak generates mid-flow — and each
+  realm's issuer scheme — correctly matches whichever hostname (and
+  `https`) the request actually came in on; the other project's realm
+  keeps working exactly as before.
 
 ### 5. Set the `sync: false` environment variables
 
@@ -268,7 +280,6 @@ service's **Environment** tab in the Render dashboard:
 | `NEXTAUTH_URL` | This service's own public URL (e.g. `https://findmygameparts.com`) |
 | `KEYCLOAK_ISSUER` | `https://auth.findmygame.parts/realms/find-my-game-parts` |
 | `KEYCLOAK_PUBLIC_URL` | `https://auth.findmygame.parts` — **the same host as `KEYCLOAK_ISSUER`'s base**; unlike local dev's container-vs-host split, there's no internal network here at all, since Keycloak isn't on Render |
-| `KEYCLOAK_CLIENT_SECRET` | From `keycloak/setup-realm.sh`'s output (step 6) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Your Resend credentials |
 | `BGG_API_TOKEN` | Once BGG approves your application — also needs wiring into `lib/bgg.ts` (TODOS.md tracks this) |
 
@@ -290,19 +301,20 @@ The script only ever touches the `find-my-game-parts` realm — safe to run
 against an instance already serving other projects. Because
 `APP_PUBLIC_URL` starts with `https://`, it also automatically skips the
 `sslRequired=NONE` calls (those are dev-only, for plain-http `localhost`
-— see the script's comments). Copy the printed client secret into
-`KEYCLOAK_CLIENT_SECRET` (step 5). Then, in the Keycloak console: create
-real users, add admins to the `admin` group, and set up Google/Facebook
-as identity providers with production redirect URIs (same steps as local
-dev, above) — scoped to this realm only.
+— see the script's comments). The client it creates is public
+(Authorization Code + PKCE, no secret) — nothing to copy anywhere. Then,
+in the Keycloak console: create real users, add admins to the `admin`
+group, and set up Google/Facebook as identity providers with production
+redirect URIs (same steps as local dev, above) — scoped to this realm only.
 
-### 7. Run database migrations
+### 7. Database migrations run automatically
 
-One-off job against the app's database (Render dashboard → the app
-service → **Shell**, or `render ssh`):
+`render.yaml`'s `preDeployCommand` runs this before every deploy starts
+serving traffic — no manual step needed. If you ever need to run it by
+hand (e.g. troubleshooting), it's a one-off job against the app's database:
 
 ```bash
-npx prisma migrate deploy
+render jobs create <app-service-id> --start-command "npx --yes prisma@7.10.0 migrate deploy"
 ```
 
 ### 8. CI/CD

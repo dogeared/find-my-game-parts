@@ -23,6 +23,18 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: starter
+    # Runs after the image builds but before the new instance starts
+    # serving traffic — applies pending migrations automatically on every
+    # deploy. Added after a real deploy went live with the schema never
+    # applied at all (a one-off manual step that's easy to forget).
+    #
+    # `prisma` (the CLI) is deliberately NOT a production dependency — its
+    # own dependency tree includes mysql2/deepmerge-ts, which carry real
+    # Snyk-flagged high-severity findings we don't want in the production
+    # tree for a Postgres-only app. `npx --yes prisma@7.10.0` fetches the
+    # exact same pinned version used everywhere else in this repo, fresh,
+    # each deploy, without ever touching package.json/package-lock.json.
+    preDeployCommand: npx --yes prisma@7.10.0 migrate deploy
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -45,8 +57,10 @@ services:
         value: find-my-game-parts
       - key: KEYCLOAK_CLIENT_ID
         value: find-my-game-parts
-      - key: KEYCLOAK_CLIENT_SECRET
-        sync: false
+      # No KEYCLOAK_CLIENT_SECRET — the client is public (Authorization
+      # Code + PKCE only, see lib/auth.ts). A confidential client here
+      # makes every login fail with "client_secret_basic client
+      # authentication method requires a client_secret" (hit live).
       - key: KEYCLOAK_ADMIN_GROUP
         value: admin
       - key: RESEND_API_KEY

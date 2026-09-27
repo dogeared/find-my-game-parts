@@ -82,10 +82,15 @@ echo "== Setting login theme to find-my-game-parts, enabling self-registration =
 $KCADM update realms/"$REALM" -s loginTheme=find-my-game-parts -s registrationAllowed=true
 
 echo "== Creating client: $CLIENT_ID (skips if it already exists) =="
+# Public client (Authorization Code + PKCE, no client secret) — the app
+# (lib/auth.ts) sets token_endpoint_auth_method: "none" to match. A
+# confidential client here would make every login fail with
+# "client_secret_basic client authentication method requires a
+# client_secret" (hit live), since the app never sends one.
 CLIENT_UUID=$($KCADM create clients -r "$REALM" -i \
   -s clientId="$CLIENT_ID" \
   -s enabled=true \
-  -s publicClient=false \
+  -s publicClient=true \
   -s protocol=openid-connect \
   -s redirectUris="[\"$REDIRECT_URI\"]" \
   -s webOrigins="[\"$APP_PUBLIC_URL\"]" \
@@ -94,8 +99,9 @@ CLIENT_UUID=$($KCADM create clients -r "$REALM" -i \
   CLIENT_UUID=$($KCADM get clients -r "$REALM" -q clientId="$CLIENT_ID" --fields id --format csv --noquotes | tail -1)
 echo "   client id: $CLIENT_UUID"
 
-echo "== Client secret (put this in .env as KEYCLOAK_CLIENT_SECRET) =="
-$KCADM get clients/"$CLIENT_UUID"/client-secret -r "$REALM"
+# Idempotent even if the client already existed as confidential from
+# before this script switched to publicClient=true.
+$KCADM update clients/"$CLIENT_UUID" -r "$REALM" -s publicClient=true
 
 echo "== Adding the group-membership protocol mapper (no console UI for this) =="
 $KCADM create clients/"$CLIENT_UUID"/protocol-mappers/models -r "$REALM" \
