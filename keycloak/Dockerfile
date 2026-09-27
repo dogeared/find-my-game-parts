@@ -39,10 +39,12 @@ ENV KC_CACHE=local
 # kc.sh's own container-aware default (JAVA_OPTS_KC_HEAP, confirmed by
 # reading kc.sh/kc.bat directly) sizes the heap to 70% of detected
 # container memory, plus a 256m metaspace cap from its other JAVA_OPTS
-# default — 70% of 512Mi alone is already ~358Mi, and 358Mi heap + 256Mi
-# metaspace exceeds 512Mi before counting thread stacks or native/off-heap
-# memory. Cut both explicitly, leaving headroom for that overhead.
-ENV JAVA_OPTS_KC_HEAP="-XX:MaxRAMPercentage=50 -XX:MinRAMPercentage=50 -XX:InitialRAMPercentage=35"
+# default. An initial pass at 50%/128m still measured at 433Mi/512Mi
+# (84%) idle in local testing (no traffic yet) and still OOM'd on Render
+# — Render's actual enforcement runs tighter than a local --memory=512m
+# test reproduces, so this leaves real headroom rather than living at
+# the edge of a limit that can't be verified precisely from outside.
+ENV JAVA_OPTS_KC_HEAP="-XX:MaxRAMPercentage=35 -XX:MinRAMPercentage=35 -XX:InitialRAMPercentage=25"
 ENV JAVA_OPTS_APPEND="-XX:MaxMetaspaceSize=128m -XX:MetaspaceSize=64m"
 
 COPY docker-entrypoint.sh /opt/keycloak/bin/docker-entrypoint.sh
