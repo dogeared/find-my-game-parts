@@ -72,8 +72,14 @@ case "$APP_PUBLIC_URL" in
     ;;
 esac
 
-echo "== Setting login theme to find-my-game-parts =="
-$KCADM update realms/"$REALM" -s loginTheme=find-my-game-parts
+echo "== Setting login theme to find-my-game-parts, enabling self-registration =="
+# registrationAllowed puts a "Register" link on Keycloak's own hosted login
+# page — the registration form (username/email/name/password) is served by
+# the same theme automatically, since it extends keycloak.v2 broadly rather
+# than forking specific templates (confirmed live: same pf-v5-c-button.pf-m-primary
+# classes this theme's CSS already targets). No app-side changes needed —
+# it's a Keycloak-hosted page, reached the same way login already is.
+$KCADM update realms/"$REALM" -s loginTheme=find-my-game-parts -s registrationAllowed=true
 
 echo "== Creating client: $CLIENT_ID (skips if it already exists) =="
 CLIENT_UUID=$($KCADM create clients -r "$REALM" -i \

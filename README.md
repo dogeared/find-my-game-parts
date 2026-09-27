@@ -27,8 +27,12 @@ automated — creating OAuth apps needs a real person driving it. Until it's
 done, sign-in will fail even though the app itself is running.
 
 **Fast path for steps 1 and the group mapper below:** `keycloak/setup-realm.sh`
-scripts the whole realm/client/group/mapper bootstrap via `kcadm` (everything
-except Google/Facebook and creating real users, which still need a person).
+scripts the whole realm/client/group/mapper bootstrap via `kcadm`, including
+turning on self-registration (`registrationAllowed`) so people can create
+their own accounts from Keycloak's own login page — no app code needed for
+this, it's a Keycloak-hosted page reached the same way login already is, and
+it automatically inherits the custom theme (everything except Google/
+Facebook and creating real users, which still need a person).
 This Keycloak instance's realm data isn't persisted (`start-dev`, embedded
 database) — a container *recreate* wipes it, which has already happened
 more than once during development — so re-running this script is faster
@@ -64,6 +68,7 @@ It prints a new client secret each time it creates the client — update
    - Valid redirect URIs: `http://localhost:3030/api/auth/callback/keycloak`
 6. Save, open the client's **Credentials** tab, and copy the **Client secret** into `KEYCLOAK_CLIENT_SECRET` in your `.env`.
 7. **Create a group named after `KEYCLOAK_ADMIN_GROUP`** (defaults to `admin`) and add its members via **Users** → select a user → **Groups** → **Join Group**. Group membership *is* admin status in this app — see "Admins are managed via Keycloak groups" below.
+8. **Realm settings** → **Login** tab → turn on **User registration** — this is what puts a "Register" link on the login page so people can create their own accounts (`setup-realm.sh` does this automatically if you used the fast path instead).
 
 ### Admins are managed via Keycloak groups, not a database flag
 
