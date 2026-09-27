@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-0.4.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.4.1-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 
 Concierge MVP for sourcing replacement board game parts. Full design context: [`docs/designs/find-my-game-parts.md`](docs/designs/find-my-game-parts.md).
@@ -363,12 +363,17 @@ render jobs create <app-service-id> --start-command "npx --yes prisma@7.10.0 mig
 
 ### 8. CI/CD
 
-`.github/workflows/ci.yml` runs lint, typecheck, the test suite, and
-`snyk test`/`snyk code test` on every push/PR (needs a `SNYK_TOKEN` repo
-secret). Render's own GitHub integration handles continuous deploy on
-merge to `main` automatically once the blueprint is connected (step 3),
-so this CI is about catching regressions before merge, not triggering
-the deploy itself.
+`.github/workflows/ci.yml` runs lint, typecheck, and the test suite on
+every push/PR. Render's own GitHub integration handles continuous deploy
+on merge to `main` automatically once the blueprint is connected
+(step 3), so this CI is about catching regressions before merge, not
+triggering the deploy itself.
+
+Snyk (`snyk test`/`snyk code test`) is temporarily removed from CI —
+`snyk code test` hung indefinitely more than once, and even with
+per-step timeouts as a backstop the timing was still unreliable enough
+to pull from required checks. It's still enforced locally via the
+`.husky/pre-push` hook; will be re-added to CI once confirmed stable.
 
 ## Tests, lint, typecheck
 
