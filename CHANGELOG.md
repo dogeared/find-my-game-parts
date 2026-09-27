@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] - 2026-09-27
+
+### Fixed
+- Keycloak's post-email-verification page ("Your email address has been
+  verified.") had no link or way to continue — `setup-realm.sh` now sets
+  the client's `baseUrl` (Keycloak's "Home URL" field), which Keycloak's
+  own default template falls back to for a "Back to Application" link.
+
+[0.4.2]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.4.2
+
 ## [0.4.1] - 2026-09-27
 
 ### Changed
