@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-09-27
+
+### Fixed
+- Production Docker build: `prisma.config.ts` was never copied into the
+  image, so `prisma migrate deploy` couldn't resolve `datasource.url` and
+  every page hitting the database 500'd ("table public.Game does not
+  exist") on the first real deploy. `render.yaml`'s `preDeployCommand`
+  now runs migrations automatically before every deploy, via a
+  version-pinned ephemeral `npx` invocation that never touches the
+  production dependency tree (keeps Snyk-flagged transitive
+  vulnerabilities in `prisma`'s own dependencies out of scope).
+- Keycloak multi-domain hostname resolution: a fixed `KC_HOSTNAME`
+  alongside `hostname-strict=false` caused Keycloak's own generated
+  links (e.g. `login-actions/authenticate`) to fall back to a different
+  realm's hostname mid-flow, breaking the session cookie across origins.
+  Removing the fixed hostname entirely (`proxy-headers=xforwarded`,
+  confirmed via Keycloak's own hostname-debug page to match what
+  Cloudflare Tunnel actually sends) fixed it for both realms.
+- Keycloak client authentication: switched to a public client
+  (Authorization Code + PKCE, no client secret) to match how the
+  self-hosted instance's client was actually configured — the app was
+  still sending `client_secret_basic`, failing every login.
+- Keycloak login theme now actually applies on the self-hosted instance
+  (files were never deployed there before) and the group-membership
+  protocol mapper is in place, so Keycloak-group-based admin status
+  works correctly end-to-end in production.
+
+[0.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.3.0
+
 ## [0.2.0] - 2026-09-27
 
 ### Added
