@@ -25,6 +25,12 @@
 # for a plain-http APP_PUBLIC_URL (see the case statements below), so
 # this never weakens a real deployment.
 #
+# Set SMTP_HOST/SMTP_PORT/SMTP_FROM/SMTP_USER/SMTP_PASSWORD to configure
+# the realm's outgoing email (Mailjet/Mailgun/etc., any standard SMTP
+# relay) and turn on email verification for new accounts. Optional — if
+# SMTP_HOST is unset, both are skipped entirely, so local dev keeps
+# working with no real email account needed.
+#
 # NOT everything here is dev-only:
 #   - Realm/client/redirect-URI creation, the admin group, and the group
 #     membership mapper are exactly what you'd also do in production
@@ -116,6 +122,25 @@ $KCADM create clients/"$CLIENT_UUID"/protocol-mappers/models -r "$REALM" \
 
 echo "== Creating the $ADMIN_GROUP group (skips if it already exists) =="
 $KCADM create groups -r "$REALM" -s name="$ADMIN_GROUP" 2>/dev/null || echo "   (already exists)"
+
+# Email verification — optional, only configured if SMTP_HOST is set, so
+# local dev is untouched by default (registering there keeps working with
+# no real email account needed). Must be set as a single JSON object in
+# one -s call: per-field dot-notation (-s smtpServer.host=...) silently
+# no-ops against a realm's smtpServer map — confirmed live by setting it
+# that way and finding smtpServer still empty afterward, even though
+# kcadm's own docs describe dot-notation as generally supported. All
+# values must be strings (Keycloak's smtpServer is a Map<String,String>),
+# including port/auth/starttls/ssl — a bare number or boolean here is a
+# JSON-type mismatch against that schema, not just a style choice.
+if [ -n "$SMTP_HOST" ]; then
+  echo "== Configuring SMTP and enabling email verification =="
+  $KCADM update realms/"$REALM" \
+    -s verifyEmail=true \
+    -s "smtpServer={\"host\":\"$SMTP_HOST\",\"port\":\"${SMTP_PORT:-587}\",\"from\":\"$SMTP_FROM\",\"auth\":\"true\",\"starttls\":\"true\",\"ssl\":\"false\",\"user\":\"$SMTP_USER\",\"password\":\"$SMTP_PASSWORD\"}"
+else
+  echo "== Skipping SMTP/email verification (SMTP_HOST not set) =="
+fi
 
 echo ""
 echo "Done. Still manual, on purpose: creating real users (Users -> Add user),"
