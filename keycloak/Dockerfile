@@ -27,6 +27,14 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 ENV KC_PROXY_HEADERS=xforwarded
 ENV KC_HTTP_ENABLED=true
 
+# Production mode defaults --cache to 'ispn', clustering via JGroups/
+# Infinispan across server nodes — pure overhead for this single-instance
+# deployment (no HA per the design doc's stated scope), and confirmed via
+# a real Render deploy to be what pushed the container over the starter
+# plan's 512Mi limit (Out of memory, repeated JGroups connection-handshake
+# failures in the logs). 'local' disables clustering entirely.
+ENV KC_CACHE=local
+
 COPY docker-entrypoint.sh /opt/keycloak/bin/docker-entrypoint.sh
 USER root
 RUN chmod +x /opt/keycloak/bin/docker-entrypoint.sh
