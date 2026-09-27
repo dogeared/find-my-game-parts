@@ -2,6 +2,18 @@
 
 ## Find My Game Parts
 
+### Wire up the approved BGG API token
+
+**What:** Once BGG approves the application (submitted 2026-09-27), add `BGG_API_TOKEN` to `.env`/`docker-compose.yml`, send it as `Authorization: Bearer <token>` in `lib/bgg.ts`'s `fetch` call, and flip `REQUIRE_BGG_MATCH` back to `true` in `app/request/page.tsx`.
+
+**Why:** BGG's XML API has required a registered, approved token since July 2, 2025 — anonymous requests get a flat 401. Confirmed live during implementation; `bgg.ts` currently returns an empty result for every search, so the request form's "require a valid game" gate was relaxed to accept the manual-fallback path too, not just a real BGG match.
+
+**Context:** See the Dependencies section of `docs/designs/find-my-game-parts.md` for the full story. This is a 3-part change (add the header, re-enable the frontend gate, remove this TODO) — do all three together so the gate and the actual API capability stay in sync.
+
+**Effort:** S
+**Priority:** P1
+**Depends on:** BGG approving the application (external, out of our control — typically 1-2 business days per other developers' reports)
+
 ### Keycloak monitoring / break-glass admin path
 
 **What:** Add basic uptime monitoring for the self-hosted Keycloak instance, plus a break-glass way for the founder to access the admin panel (toggle inventory, triage requests) if Keycloak is down.

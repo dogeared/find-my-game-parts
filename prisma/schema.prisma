@@ -1,0 +1,67 @@
+// Data model per the D1 structure decision in docs/designs/find-my-game-parts.md:
+// one small app, one shared data model, no separate service layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String        @id @default(cuid())
+  // Keycloak's OIDC "sub" claim — the app never stores a password itself,
+  // Keycloak (and its federated Google/Facebook IdPs) owns that entirely.
+  keycloakSub String        @unique
+  email       String        @unique
+  isAdmin     Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  requests    PartRequest[]
+}
+
+model Game {
+  id        String        @id @default(cuid())
+  bggId     String? // null when added via the manual fallback (BGG lookup failed/slow)
+  title     String
+  inStock   Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  requests  PartRequest[]
+
+  @@index([inStock])
+}
+
+enum CriticalityTag {
+  UNSET // default until the admin triages it (manual, per office-hours R3-1 resolution)
+  UNIQUE
+  FUNGIBLE
+}
+
+enum RequestStatus {
+  PENDING
+  AVAILABLE // admin claimed it for this buyer; claimedAt starts the 5-day window
+  NOT_AVAILABLE
+}
+
+model PartRequest {
+  id              String          @id @default(cuid())
+  game            Game            @relation(fields: [gameId], references: [id])
+  gameId          String
+  requester       User            @relation(fields: [requesterId], references: [id])
+  requesterId     String
+  partDescription String
+  quantity        Int             @default(1)
+  editionNote     String? // freeform, optional — edition/language/printing flag (outside-voice finding #4)
+  maxPrice        Decimal?        @db.Decimal(10, 2)
+  criticalityTag  CriticalityTag  @default(UNSET)
+  status          RequestStatus   @default(PENDING)
+  price           Decimal?        @db.Decimal(10, 2) // set by admin when marking AVAILABLE
+  claimedAt       DateTime? // when marked AVAILABLE; the 5-day claim window starts here
+  createdAt       DateTime        @default(now())
+
+  // Datestamp-ordered per-game triage list depends on this index — no
+  // automatic part-bucket grouping exists (office-hours R3-1); the admin
+  // reads this ordering manually.
+  @@index([gameId, createdAt])
+  @@index([status])
+}

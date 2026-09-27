@@ -438,7 +438,8 @@
   function setCookie(name, value, days) {
     try {
       var maxAge = days * 24 * 60 * 60;
-      document.cookie = name + '=' + encodeURIComponent(value) + '; max-age=' + maxAge + '; path=/; SameSite=Lax';
+      var secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = name + '=' + encodeURIComponent(value) + '; max-age=' + maxAge + '; path=/; SameSite=Lax' + secure;
     } catch (e) {}
   }
   function getCookie(name) {

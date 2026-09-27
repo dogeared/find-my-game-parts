@@ -1,0 +1,248 @@
+/* Design tokens carried over from the approved wireframe
+   (docs/designs/assets/find-my-game-parts-wireframe/sketch.html).
+   All four schemes now ship (scope trim reversed post-launch — cheap
+   enough that the deferral wasn't worth it in practice). Accessibility
+   overrides always win over whichever scheme is picked. */
+
+:root {
+  --bg: #f4ecd8;
+  --ink: #2c2137;
+  --accent: #e2703a;
+  --accent-2: #4d7c8a;
+  --border: #2c2137;
+}
+
+[data-theme="arcade"] {
+  --bg: #191534;
+  --ink: #f4f1ff;
+  --accent: #ff5da2;
+  --accent-2: #4be3c8;
+  --border: #f4f1ff;
+}
+
+[data-theme="seafoam"] {
+  --bg: #eef6f2;
+  --ink: #123b34;
+  --accent: #ff8a5c;
+  --accent-2: #2a9d8f;
+  --border: #123b34;
+}
+
+[data-theme="mono"] {
+  --bg: #ffffff;
+  --ink: #1a1a1a;
+  --accent: #1a1a1a;
+  --accent-2: #6b6b6b;
+  --border: #1a1a1a;
+}
+
+[data-a11y="on"] {
+  --bg: #000000;
+  --ink: #ffffff;
+  --accent: #ffe066;
+  --accent-2: #66ffe0;
+  --border: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 17px;
+  min-height: 100vh;
+}
+
+[data-a11y="on"] body {
+  font-size: 22px;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--accent-2);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar-nav,
+.topbar-utility {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.nav-user {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch.active {
+  box-shadow: 3px 3px 0 var(--border);
+}
+
+.swatch[data-swatch="parchment"] {
+  background: #f4ecd8;
+}
+.swatch[data-swatch="arcade"] {
+  background: #191534;
+}
+.swatch[data-swatch="seafoam"] {
+  background: #eef6f2;
+}
+.swatch[data-swatch="mono"] {
+  background: #ffffff;
+}
+
+.a11y-toggle {
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: var(--bg);
+  color: var(--ink);
+  border: 3px solid var(--border);
+  box-shadow: 3px 3px 0 var(--border);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Shared base for both variants, so `.btn-ghost` alone (no `.btn`) is
+   still fully styled — 9 of 13 call sites in the app use it that way, and
+   relying on default browser button styling for those is exactly what
+   made the Sign In button unreadable in high-contrast mode (default black
+   button text on a black background). */
+.btn,
+.btn-ghost {
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 18px;
+  color: var(--ink);
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--border);
+  cursor: pointer;
+}
+
+.btn {
+  background: var(--accent);
+}
+
+.btn-ghost {
+  background: var(--bg);
+}
+
+/* Mono's accent equals its ink color, and high-contrast's yellow accent
+   reads poorly against white text — a filled button goes invisible or
+   low-contrast in both (found once already in the wireframe review). */
+[data-theme="mono"] .btn,
+[data-a11y="on"] .btn {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.panel {
+  max-width: 660px;
+  margin: 24px auto;
+  padding: 20px;
+  border: 4px solid var(--border);
+  box-shadow: 6px 6px 0 var(--border);
+}
+
+/* These three replace what used to be inline `style={{}}` props — needed
+   so a strict CSP (style-src 'self', no 'unsafe-inline') actually works. */
+.panel-centered {
+  text-align: center;
+}
+
+.panel-dashed {
+  border-style: dashed;
+}
+
+.error-text {
+  color: var(--accent);
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  padding: 10px;
+  border: 3px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.field input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 3px solid var(--border);
+  background: var(--bg);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.game-row--stacked {
+  /* Matches exactly what the inline style={{ flexDirection: "column" }}
+     did before — not introducing a visual change in this security refactor. */
+  flex-direction: column;
+}

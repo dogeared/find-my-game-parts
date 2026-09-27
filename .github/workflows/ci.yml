@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, concierge-mvp]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      # prisma generate only reads schema.prisma, it never connects — this
+      # value just satisfies prisma.config.ts's env("DATABASE_URL") lookup.
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/placeholder
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  security:
+    name: Snyk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/placeholder
+
+      - uses: snyk/actions/setup@master
+
+      - run: snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - run: snyk code test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
