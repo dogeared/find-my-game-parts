@@ -1,6 +1,9 @@
 #!/bin/sh
-# Bootstraps a Keycloak realm end-to-end, via kcadm — works for both local
-# dev and production (see "Production deployment" in the README).
+# Bootstraps a Keycloak realm end-to-end, via kcadm — works for local dev,
+# a Render-hosted instance, or a separately self-hosted instance shared
+# across multiple projects (see "Production deployment" in the README).
+# It only ever touches the realm named $KEYCLOAK_REALM — safe to run
+# against a shared instance that also hosts other projects' realms.
 #
 # Local dev why this exists: this Keycloak instance runs in `start-dev`
 # mode with an embedded, non-persisted database (see docker-compose.yml) —
@@ -10,8 +13,12 @@
 # hand.
 #
 # Run from inside the Keycloak container (kcadm.sh only exists there):
-#   docker compose exec keycloak sh -c "$(cat keycloak/setup-realm.sh)"   # local
-#   render ssh find-my-game-parts-keycloak                                # production, then paste the script
+#   docker compose exec keycloak sh -c "$(cat keycloak/setup-realm.sh)"        # local
+#   docker exec -it <your-keycloak-container> sh                              # self-hosted, then paste the script
+#
+# Set KCADM_ADMIN_USER/KCADM_ADMIN_PASSWORD if the instance's bootstrap
+# admin isn't the local-dev default (admin/admin) — true for any real
+# instance, definitely true for a shared self-hosted one.
 #
 # Set APP_PUBLIC_URL to your real https:// production app URL to run this
 # against a production-style deploy — sslRequired is only ever disabled
@@ -35,9 +42,11 @@ APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://localhost:3030}"
 REDIRECT_URI="$APP_PUBLIC_URL/api/auth/callback/keycloak"
 
 KCADM="/opt/keycloak/bin/kcadm.sh"
+KCADM_ADMIN_USER="${KCADM_ADMIN_USER:-admin}"
+KCADM_ADMIN_PASSWORD="${KCADM_ADMIN_PASSWORD:-admin}"
 
 echo "== Logging into master realm =="
-$KCADM config credentials --server http://localhost:8080 --realm master --user admin --password admin
+$KCADM config credentials --server http://localhost:8080 --realm master --user "$KCADM_ADMIN_USER" --password "$KCADM_ADMIN_PASSWORD"
 
 # Only touch sslRequired for a plain-http APP_PUBLIC_URL (local dev). A
 # real https:// APP_PUBLIC_URL means this is a production-style deploy —

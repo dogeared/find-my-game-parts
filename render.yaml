@@ -1,10 +1,11 @@
 # Render Blueprint for Find My Game Parts. Validate after any change:
 #   render blueprints validate
 #
-# Two Docker-based web services (this app, and a separate Keycloak
-# instance built from keycloak/Dockerfile with the custom theme baked in)
-# plus two isolated Postgres databases — Keycloak gets its own database,
-# never sharing schema/tables with the app's.
+# One Docker-based web service (this app) plus its own isolated Postgres
+# database. Keycloak is NOT deployed here — it's self-hosted separately
+# (shared with another project, reached via Cloudflare Tunnel) and is out
+# of this blueprint's scope entirely. See README's "Production deployment"
+# for how the app's Keycloak env vars get pointed at that instance.
 #
 # Values marked `sync: false` are NOT stored here — set them in the Render
 # dashboard after the first deploy (see README's "Production deployment").
@@ -14,11 +15,6 @@ databases:
     plan: basic-256mb
     databaseName: find_my_game_parts
     user: app
-
-  - name: find-my-game-parts-keycloak-db
-    plan: basic-256mb
-    databaseName: keycloak
-    user: keycloak
 
 services:
   - type: web
@@ -37,6 +33,10 @@ services:
       # Set after the first deploy, once you know this service's real URL:
       - key: NEXTAUTH_URL
         sync: false
+      # Both point at the self-hosted Keycloak instance's public hostname
+      # (e.g. https://auth.findmygame.parts) — see README's "Production
+      # deployment" for why these are the same host here (no internal/
+      # external split, since Keycloak isn't on Render at all).
       - key: KEYCLOAK_ISSUER
         sync: false
       - key: KEYCLOAK_PUBLIC_URL
@@ -56,49 +56,4 @@ services:
       - key: BGG_API_BASE
         value: https://boardgamegeek.com/xmlapi2
       - key: BGG_API_TOKEN
-        sync: false
-
-  - type: web
-    name: find-my-game-parts-keycloak
-    runtime: docker
-    dockerfilePath: ./keycloak/Dockerfile
-    dockerContext: ./keycloak
-    plan: starter
-    envVars:
-      # Without this, Render assumes port 10000 until it observes the
-      # real bound port, then restarts its proxy/networking layer mid-
-      # deploy ("New primary port detected: 8080. Restarting deploy...",
-      # seen in an earlier failed deploy's logs). Set explicitly to skip
-      # that detection-and-restart cycle entirely.
-      - key: PORT
-        value: "8080"
-      - key: KC_DB
-        value: postgres
-      # Render's Postgres `fromDatabase` only exposes connectionString,
-      # connectionPoolString, user, password, and database — never a
-      # JDBC-shaped URL or bare host/port. KC_DB_URL below is the raw
-      # connectionString (postgresql://user:pass@host/db); the image's
-      # docker-entrypoint.sh rewrites it into the jdbc:postgresql://
-      # form Keycloak's driver actually accepts, stripping the embedded
-      # credentials since KC_DB_USERNAME/KC_DB_PASSWORD carry those
-      # separately instead.
-      - key: KC_DB_URL
-        fromDatabase:
-          name: find-my-game-parts-keycloak-db
-          property: connectionString
-      - key: KC_DB_USERNAME
-        fromDatabase:
-          name: find-my-game-parts-keycloak-db
-          property: user
-      - key: KC_DB_PASSWORD
-        fromDatabase:
-          name: find-my-game-parts-keycloak-db
-          property: password
-      - key: KC_BOOTSTRAP_ADMIN_USERNAME
-        sync: false
-      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
-        generateValue: true
-      # Set after the first deploy, once you know this service's real URL
-      # (must be a full https:// URL — hostname-strict is on by default):
-      - key: KC_HOSTNAME
         sync: false
