@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-09-27
+
+### Added
+- Optional email verification for new accounts, via Keycloak's realm-level
+  SMTP configuration (any standard SMTP relay, e.g. Mailjet's free tier).
+  Entirely Keycloak-hosted — no app code changes. Skipped by default in
+  local dev (no real email account needed) unless `SMTP_HOST` is set.
+
+### Changed
+- CI's Snyk job now has explicit timeouts (5 minutes per `snyk`
+  command, 15-minute job backstop) after `snyk test` hung indefinitely
+  in a real run and had to be cancelled by hand.
+
+[0.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.4.0
+
 ## [0.3.0] - 2026-09-27
 
 ### Fixed
