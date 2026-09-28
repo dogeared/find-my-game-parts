@@ -9,11 +9,17 @@
 // again after each per-item triage action, so the buyer always sees the
 // order's full current picture (not just what just changed).
 
-import { Resend } from "resend";
+import { Client, type SendEmailV3_1 } from "node-mailjet";
 import { formatExtendedPrice } from "@/lib/pricing";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? "no-reply@findmygameparts.example";
+// Same provider Keycloak already sends through for this domain (SMTP,
+// keycloak/setup-realm.sh) — consolidating here avoids a second
+// domain-verification/deliverability setup for one extra service.
+const mailjet =
+  process.env.MJ_APIKEY_PUBLIC && process.env.MJ_APIKEY_PRIVATE
+    ? new Client({ apiKey: process.env.MJ_APIKEY_PUBLIC, apiSecret: process.env.MJ_APIKEY_PRIVATE })
+    : null;
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? "noreply@findmygame.parts";
 
 export type OrderEmailItem = {
   partDescription: string;
@@ -28,8 +34,8 @@ export async function sendOrderResponseEmail(params: {
   gameTitle: string;
   items: OrderEmailItem[];
 }): Promise<{ sent: boolean }> {
-  if (!resend) {
-    console.error("RESEND_API_KEY not configured — email not sent", params);
+  if (!mailjet) {
+    console.error("MJ_APIKEY_PUBLIC/MJ_APIKEY_PRIVATE not configured — email not sent", params);
     return { sent: false };
   }
 
@@ -70,12 +76,17 @@ export async function sendOrderResponseEmail(params: {
   ].join("\n");
 
   try {
-    await resend.emails.send({
-      from: FROM_ADDRESS,
-      to: params.to,
-      subject,
-      text: body,
-    });
+    const request: SendEmailV3_1.Body = {
+      Messages: [
+        {
+          From: { Email: FROM_ADDRESS },
+          To: [{ Email: params.to }],
+          Subject: subject,
+          TextPart: body,
+        },
+      ],
+    };
+    await mailjet.post("send", { version: "v3.1" }).request(request);
     return { sent: true };
   } catch (error) {
     console.error("Failed to send order-response email", error);

@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.1.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.2.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -275,7 +275,7 @@ that entirely and reuses infrastructure that already exists.
   above, just with production redirect URIs instead of `localhost`).
 - BGG API access approved (see Dependencies in
   [the design doc](docs/designs/find-my-game-parts.md)) and a
-  [Resend](https://resend.com) API key, if you want those live in
+  [Mailjet](https://mailjet.com) API key pair, if you want those live in
   production from day one — both are optional at first (the app degrades
   gracefully: BGG search returns empty, email failures are logged, not fatal).
 
@@ -338,7 +338,7 @@ service's **Environment** tab in the Render dashboard:
 | `NEXTAUTH_URL` | This service's own public URL (e.g. `https://findmygameparts.com`) |
 | `KEYCLOAK_ISSUER` | `https://auth.findmygame.parts/realms/find-my-game-parts` |
 | `KEYCLOAK_PUBLIC_URL` | `https://auth.findmygame.parts` — **the same host as `KEYCLOAK_ISSUER`'s base**; unlike local dev's container-vs-host split, there's no internal network here at all, since Keycloak isn't on Render |
-| `RESEND_API_KEY`, `EMAIL_FROM` | Your Resend credentials |
+| `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `EMAIL_FROM` | Your Mailjet credentials — same provider Keycloak sends through for this domain |
 | `BGG_API_TOKEN` | Once BGG approves your application — also needs wiring into `lib/bgg.ts` (TODOS.md tracks this) |
 
 ### 6. Bootstrap the realm
@@ -410,10 +410,10 @@ docker run --rm -v "$PWD":/app -w /app node:22-slim npx eslint .
   realm/client and Google/Facebook federation are not created yet (see above).
   Self-registration and optional email verification (SMTP) are supported
   via `keycloak/setup-realm.sh` — see "Email verification" above.
-- Email notifications use Resend — needs a real `RESEND_API_KEY` in `.env`.
-  (Separate from Keycloak's own SMTP config for email verification above
-  — two different providers for two different purposes is intentional,
-  not a leftover.)
+- Email notifications use Mailjet — needs real `MJ_APIKEY_PUBLIC`/
+  `MJ_APIKEY_PRIVATE` credentials in `.env`. Same provider Keycloak's own
+  SMTP config (above) already sends through for this domain — one email
+  service for the whole project, not two.
 - Deployment: app + database on Render (`render.yaml`), Keycloak
   self-hosted separately (see "Production deployment").
 
