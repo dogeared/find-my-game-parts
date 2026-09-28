@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { formatExtendedPrice } from "@/lib/pricing";
 
 type Game = { id: string; title: string; bggId: string | null; inStock: boolean };
 type Tab = "inventory" | "requests" | "about";
@@ -260,7 +261,9 @@ function RequestsTab() {
                       <span>
                         {" "}
                         — {item.quantityAvailable} of {item.quantityRequested} available
-                        {item.price && <> — ${item.price}</>}
+                        {formatExtendedPrice(item.price, item.quantityAvailable) && (
+                          <> — {formatExtendedPrice(item.price, item.quantityAvailable)}</>
+                        )}
                       </span>
                     )}
                   </div>
@@ -280,12 +283,12 @@ function RequestsTab() {
                   {item.status === "PENDING" && (
                     <div>
                       <label>
-                        Price:{" "}
+                        Price per item:{" "}
                         <input
                           type="text"
                           value={draftFor(item).price}
                           onChange={(e) => updateDraft(item, { price: e.target.value })}
-                          placeholder="$10"
+                          placeholder="$2"
                         />
                       </label>{" "}
                       {item.quantityRequested > 1 && (

@@ -3,6 +3,7 @@
 import { signIn, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { CLAIM_WINDOW_MS } from "@/lib/constants";
+import { formatExtendedPrice } from "@/lib/pricing";
 
 type MyItem = {
   id: string;
@@ -29,7 +30,8 @@ function statusLabel(item: MyItem): string {
     item.quantityAvailable != null && item.quantityAvailable < item.quantityRequested
       ? `${item.quantityAvailable} of ${item.quantityRequested} available`
       : "Available";
-  return item.price ? `${qty} — $${item.price}` : qty;
+  const price = formatExtendedPrice(item.price, item.quantityAvailable ?? item.quantityRequested);
+  return price ? `${qty} — ${price}` : qty;
 }
 
 export default function MyRequestsPage() {

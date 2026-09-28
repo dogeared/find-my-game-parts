@@ -10,6 +10,7 @@
 // order's full current picture (not just what just changed).
 
 import { Resend } from "resend";
+import { formatExtendedPrice } from "@/lib/pricing";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "no-reply@findmygameparts.example";
@@ -53,7 +54,9 @@ export async function sendOrderResponseEmail(params: {
       item.quantityAvailable != null && item.quantityAvailable < item.quantityRequested
         ? ` (only ${item.quantityAvailable} of ${item.quantityRequested} available)`
         : "";
-    return `- ${item.partDescription} (qty ${item.quantityRequested}): available${qtyNote} — $${item.price ?? "TBD"}`;
+    const price =
+      formatExtendedPrice(item.price, item.quantityAvailable ?? item.quantityRequested) ?? "TBD";
+    return `- ${item.partDescription} (qty ${item.quantityRequested}): available${qtyNote} — ${price}`;
   });
 
   const body = [
