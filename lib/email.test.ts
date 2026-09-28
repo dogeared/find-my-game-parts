@@ -65,7 +65,7 @@ describe("sendOrderResponseEmail", () => {
     expect(call.subject).toContain("some parts available");
     expect(call.text).toContain("Rohan Stealth card (qty 1): not available");
     expect(call.text).toContain(
-      "Shadow Warrior meeple (qty 10): available (only 5 of 10 available) — $20.00"
+      "Shadow Warrior meeple (qty 10): available (only 5 of 10 available) — $20.00 each — $100.00 total"
     );
   });
 
