@@ -4,17 +4,15 @@ import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { BggAttribution } from "@/components/BggAttribution";
 import type { BggSearchResult } from "@/lib/bgg";
 
-// BGG's XML API now requires a registered, approved token (bgg.ts returns
-// an empty result for every search until BGG_API_TOKEN exists — see the
-// Dependencies section of the design doc). Every search currently returns
-// nothing, so: no search-as-you-type dropdown, no "no match found" message
-// (would fire on literally every keystroke, even for well-known games) —
-// just a plain freeform field. Flip this back to `true` once BGG_API_TOKEN
-// is set and bgg.ts sends it; both the search UI below and the submission
-// gate already branch on this single flag.
-const BGG_SEARCH_AVAILABLE = false;
+// BGG approved the application's API token 2026-09-28 (bgg.ts sends it as
+// a Bearer header) — live search-as-you-type is favored, with "use this
+// title anyway" as an explicit freeform fallback when BGG has no match or
+// is slow/down. Both the search UI below and the submission gate branch
+// on this single flag.
+const BGG_SEARCH_AVAILABLE = true;
 
 type RequestItem = {
   partDescription: string;
@@ -80,7 +78,13 @@ function RequestForm() {
     }
   }
 
-  const isGameChosen = BGG_SEARCH_AVAILABLE ? Boolean(bggId) : Boolean(gameTitle.trim());
+  // gameTitle (not bggId) is the one field every path sets: arriving
+  // locked from the inventory list, picking a real BGG match, clicking
+  // "use this title anyway", and fully-freeform mode all set gameTitle —
+  // bggId only gets set on a real BGG pick, so checking it alone would
+  // block the deliberate-freeform-override path this form needs to keep
+  // working.
+  const isGameChosen = Boolean(gameTitle.trim());
   const isItemValid = (item: RequestItem) =>
     Boolean(item.partDescription.trim()) && Number.isFinite(item.quantity) && item.quantity >= 1;
   const areItemsValid = items.length > 0 && items.every(isItemValid);
@@ -88,7 +92,7 @@ function RequestForm() {
 
   const disabledReason = !isGameChosen
     ? BGG_SEARCH_AVAILABLE
-      ? "Select a game from the BGG search results to continue"
+      ? "Select a game from the search results (or use your typed title if there's no match) to continue"
       : "Enter a game to continue"
     : !areItemsValid
       ? "Describe each part and give it a valid quantity (1 or more) to continue"
@@ -198,6 +202,7 @@ function RequestForm() {
                 </button>
               </p>
             )}
+            <BggAttribution />
           </>
         ) : (
           // BGG search is down (see BGG_SEARCH_AVAILABLE above) — plain

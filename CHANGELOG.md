@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-09-28
+
+### Added
+- Live BGG game search on the request form, now that BGG has approved
+  this app's API token — search-as-you-type is favored, with "use this
+  title anyway" kept as an explicit freeform fallback for a slow/down API
+  or a title BGG doesn't recognize. Same fallback used by the admin's
+  inventory-add flow already, now actually reachable since the token
+  works.
+- "Powered by BoardGameGeek" attribution on the request form's search UI,
+  per BGG's API terms — placeholder pending the exact required logo
+  asset/wording (BGG's terms/logo pages aren't reachable for automated
+  verification; to be swapped in once confirmed).
+
+### Fixed
+- A game picked from the public inventory list, or confirmed via "use
+  this title anyway," would have silently failed to enable the submit
+  button once BGG search was live — the validity check required a BGG
+  match specifically (`bggId`) instead of any deliberate game choice.
+  Caught before shipping by tracing through the flag flip live.
+- BGG search results weren't decoding HTML/XML entities (e.g. `Catan:
+  Traders &amp; Barbarians`, `Collector&#039;s Edition`) — invisible
+  while the API returned nothing, confirmed live once real results
+  started flowing through the real token.
+
 ## [1.3.1] - 2026-09-28
 
 ### Changed
@@ -100,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.0
 [1.3.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.2.0
