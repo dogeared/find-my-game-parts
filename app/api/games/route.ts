@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { searchBggGames } from "@/lib/bgg";
+import { isValidBggId, searchBggGames } from "@/lib/bgg";
 import { isValidText } from "@/lib/validation";
 
 // Public callers see only in-stock games. Admins see everything (including
@@ -34,6 +34,9 @@ export async function POST(request: Request) {
 
   if (!isValidText(title)) {
     return NextResponse.json({ error: "title is required (500 characters max)" }, { status: 400 });
+  }
+  if (bggId && !isValidBggId(bggId)) {
+    return NextResponse.json({ error: "Invalid BGG id" }, { status: 400 });
   }
 
   let resolvedBggId = bggId ?? null;

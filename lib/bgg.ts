@@ -7,8 +7,19 @@ export type BggSearchResult = {
   title: string;
 };
 
+// BGG ids are always numeric (see the search XML's `id="(\d+)"`). Validate
+// at every boundary that accepts a client-supplied bggId (both API routes
+// below) and again wherever one gets rendered into a link — a client could
+// otherwise POST an arbitrary string straight into Game.bggId, which would
+// later flow into an <a href> on admin triage / My Requests (flagged by
+// Snyk as a DOM XSS risk on the render side; this closes the root cause).
+export function isValidBggId(value: unknown): value is string {
+  return typeof value === "string" && /^\d+$/.test(value);
+}
+
 // Shared everywhere a game's BGG id is shown as a link (admin triage,
 // buyer's My Requests) so the URL shape only needs to be right once.
+// Callers must guard with isValidBggId first.
 export function bggGameUrl(bggId: string): string {
   return `https://boardgamegeek.com/boardgame/${bggId}`;
 }

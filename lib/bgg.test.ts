@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { searchBggGames } from "./bgg";
+import { isValidBggId, searchBggGames } from "./bgg";
 
 const SAMPLE_XML = `<?xml version="1.0"?>
 <items>
@@ -114,5 +114,24 @@ describe("searchBggGames", () => {
 
     expect(fetchSpy.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer test-bgg-token" });
     delete process.env.BGG_API_TOKEN;
+  });
+});
+
+describe("isValidBggId", () => {
+  it("accepts a plain numeric string", () => {
+    expect(isValidBggId("266192")).toBe(true);
+  });
+
+  it("rejects non-numeric strings, including URL/script injection attempts", () => {
+    expect(isValidBggId("javascript:alert(1)")).toBe(false);
+    expect(isValidBggId("266192; DROP TABLE")).toBe(false);
+    expect(isValidBggId("../../etc/passwd")).toBe(false);
+    expect(isValidBggId("")).toBe(false);
+  });
+
+  it("rejects non-string values", () => {
+    expect(isValidBggId(null)).toBe(false);
+    expect(isValidBggId(undefined)).toBe(false);
+    expect(isValidBggId(266192)).toBe(false);
   });
 });

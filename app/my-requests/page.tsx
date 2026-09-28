@@ -2,7 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { bggGameUrl } from "@/lib/bgg";
+import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { CLAIM_WINDOW_MS } from "@/lib/constants";
 import { formatExtendedPrice } from "@/lib/pricing";
 
@@ -78,7 +78,7 @@ export default function MyRequestsPage() {
         <div key={order.id} className="panel">
           <h3>
             {order.game.title}
-            {order.game.bggId && (
+            {isValidBggId(order.game.bggId) && (
               <>
                 {" "}
                 <a href={bggGameUrl(order.game.bggId)} target="_blank" rel="noopener noreferrer">

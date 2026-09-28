@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { MarkdownContent } from "@/components/MarkdownContent";
-import { bggGameUrl } from "@/lib/bgg";
+import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { formatExtendedPrice } from "@/lib/pricing";
 
 type Game = { id: string; title: string; bggId: string | null; inStock: boolean };
@@ -260,7 +260,7 @@ function RequestsTab() {
         <div key={gameId} className="panel">
           <h3>
             {title}
-            {bggId && (
+            {isValidBggId(bggId) && (
               <>
                 {" "}
                 <a href={bggGameUrl(bggId)} target="_blank" rel="noopener noreferrer">

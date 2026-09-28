@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the game's BGG listing. Only shown when a game has a real BGG match
   (not for manually-entered games).
 
+### Security
+- `bggId` was accepted from client-submitted request bodies (`POST
+  /api/requests`, `POST /api/games`) with no validation, and could flow
+  into an `<a href>` on admin triage / My Requests once the new BGG-link
+  display above was added — flagged by Snyk as a DOM XSS risk. Added
+  `isValidBggId` (numeric-only) validation at both write boundaries and
+  at the render sites; verified live that injection attempts (e.g.
+  `javascript:alert(1)`) are rejected with 400 while real BGG ids still
+  work.
+
 ## [1.4.0] - 2026-09-28
 
 ### Added
