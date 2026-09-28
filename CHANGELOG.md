@@ -5,25 +5,6 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.4.1] - 2026-09-28
-
-### Added
-- BGG id and a link to the game's BoardGameGeek page, shown next to the
-  game title on both admin triage and the buyer's My Requests page —
-  helps disambiguate similarly-titled games and gives quick access to
-  the game's BGG listing. Only shown when a game has a real BGG match
-  (not for manually-entered games).
-
-### Security
-- `bggId` was accepted from client-submitted request bodies (`POST
-  /api/requests`, `POST /api/games`) with no validation, and could flow
-  into an `<a href>` on admin triage / My Requests once the new BGG-link
-  display above was added — flagged by Snyk as a DOM XSS risk. Added
-  `isValidBggId` (numeric-only) validation at both write boundaries and
-  at the render sites; verified live that injection attempts (e.g.
-  `javascript:alert(1)`) are rejected with 400 while real BGG ids still
-  work.
-
 ## [1.4.0] - 2026-09-28
 
 ### Added
@@ -37,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   per BGG's API terms — placeholder pending the exact required logo
   asset/wording (BGG's terms/logo pages aren't reachable for automated
   verification; to be swapped in once confirmed).
+- BGG id and a link to the game's BoardGameGeek page, shown next to the
+  game title on both admin triage and the buyer's My Requests page —
+  helps disambiguate similarly-titled games and gives quick access to
+  the game's BGG listing. Only shown when a game has a real BGG match
+  (not for manually-entered games).
 
 ### Fixed
 - A game picked from the public inventory list, or confirmed via "use
@@ -48,6 +34,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Traders &amp; Barbarians`, `Collector&#039;s Edition`) — invisible
   while the API returned nothing, confirmed live once real results
   started flowing through the real token.
+
+### Security
+- `bggId` was accepted from client-submitted request bodies (`POST
+  /api/requests`, `POST /api/games`) with no validation, and could flow
+  into an `<a href>` on admin triage / My Requests once the BGG-link
+  display above was added — flagged by Snyk as a DOM XSS risk. Added
+  `isValidBggId` (numeric-only) validation at both write boundaries and
+  at the render sites, plus `encodeURIComponent` in the URL builder as
+  defense in depth; verified live that injection attempts (e.g.
+  `javascript:alert(1)`) are rejected with 400 while real BGG ids still
+  work.
 
 ## [1.3.1] - 2026-09-28
 
@@ -144,7 +141,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
-[1.4.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.1
 [1.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.0
 [1.3.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
