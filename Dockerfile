@@ -40,14 +40,15 @@ RUN npm install --omit=dev
 
 FROM base AS production
 ENV NODE_ENV=production
-# No public/ dir exists in this repo yet (no static assets) — add this
-# COPY back if one gets added later.
 COPY --from=build /app/.next ./.next
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/prisma ./prisma
+# Static assets served directly (e.g. components/BggAttribution.tsx's
+# logo) — Next.js serves public/ at the site root as-is.
+COPY --from=build /app/public ./public
 # opengraph-image.tsx reads these fonts from disk at request time — not
 # traced/bundled automatically (no `output: "standalone"`), same class of
 # bug as the earlier missing prisma.config.ts copy.
