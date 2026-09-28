@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BggAttribution } from "@/components/BggAttribution";
 import type { BggSearchResult } from "@/lib/bgg";
 import { BGG_SEARCH_AVAILABLE } from "@/lib/constants";
@@ -24,18 +24,37 @@ export function GameSearchField({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<BggSearchResult[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  // Typing fast fires a fetch per keystroke, and responses can arrive out
+  // of order over the network — without this, a slower response for an
+  // earlier, shorter query could land after the response for what's
+  // actually typed now and silently overwrite it with stale results
+  // (reported live: results appeared "stuck" mid-word). Aborting the
+  // previous in-flight request on every new keystroke guarantees only the
+  // latest query's response can ever land.
+  const pendingSearch = useRef<AbortController | null>(null);
 
   async function search(value: string) {
     setQuery(value);
     setConfirmed(false);
+    pendingSearch.current?.abort();
     if (value.trim().length < 2) {
       setResults([]);
       return;
     }
-    const res = await fetch(`/api/games/search?query=${encodeURIComponent(value)}`);
-    if (res.ok) {
-      const data = await res.json();
-      setResults(data.results ?? []);
+    const controller = new AbortController();
+    pendingSearch.current = controller;
+    try {
+      const res = await fetch(`/api/games/search?query=${encodeURIComponent(value)}`, {
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.results ?? []);
+      }
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        throw error;
+      }
     }
   }
 

@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] - 2026-09-28
+
+### Changed
+- Replaced the placeholder text-based BGG attribution with BGG's actual
+  "Powered by BGG" logo (`public/bgg-powered-by.png`, self-hosted rather
+  than hotlinked), sized at 95×28 — the smallest height that keeps the
+  logo's own text legible, checked visually at 20/24/28/32px before
+  picking this.
+
+### Fixed
+- Typing fast in the BGG game search could get "stuck" showing results
+  for an earlier, shorter query instead of what was actually typed —
+  reported live. Root cause: a fetch fired on every keystroke with no
+  cancellation, so an older response could arrive after a newer one and
+  silently overwrite it. `components/GameSearchField.tsx` now aborts the
+  previous in-flight request on every new keystroke; verified with a
+  standalone simulation of the exact race (confirmed it reproduces the
+  bug without the fix, and resolves correctly with it).
+
 ## [1.5.0] - 2026-09-28
 
 ### Added
@@ -172,6 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.1
 [1.5.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.0
 [1.4.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.1
 [1.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.0
