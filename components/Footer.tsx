@@ -13,9 +13,10 @@ export function Footer() {
         GitHub
       </a>
       <span>v{packageJson.version}</span>
-      <span>
-        made with ❤️ by <a href={PROFILE_URL}>dogeared</a>
-      </span>
+      <span>made with ❤️ by</span>
+      <a href={PROFILE_URL} className="btn-ghost">
+        dogeared
+      </a>
     </footer>
   );
 }
