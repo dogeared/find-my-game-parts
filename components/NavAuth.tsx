@@ -27,8 +27,8 @@ export function NavAuth() {
           <Link href="/admin/requests" className="btn-ghost">
             Requests
           </Link>
-          <Link href="/admin/games" className="btn-ghost">
-            Inventory
+          <Link href="/admin" className="btn-ghost">
+            Admin
           </Link>
         </>
       )}

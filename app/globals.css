@@ -246,3 +246,46 @@ a {
      did before — not introducing a visual change in this security refactor. */
   flex-direction: column;
 }
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 3px solid var(--border);
+  cursor: pointer;
+}
+
+.tab-active {
+  background: var(--accent);
+  box-shadow: 4px 4px 0 var(--border);
+}
+
+/* Admin's About-tab preview and the public /about page share this —
+   plain semantic markdown output, styled to match the app's own type
+   rather than react-markdown's unstyled defaults. */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: 20px;
+}
+
+.markdown-content a {
+  color: var(--accent-2);
+}
+
+.markdown-content code {
+  font-family: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 4px;
+}

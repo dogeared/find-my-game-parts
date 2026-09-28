@@ -402,6 +402,9 @@ docker run --rm -v "$PWD":/app -w /app node:22-slim npx eslint .
   admin add-game/toggle, admin triage (criticality tagging, the
   double-approve nudge, 5-day claim expiry) — all implemented per
   `docs/designs/find-my-game-parts.md`'s Implementation Tasks.
+- Public `/about` page, content stored in the DB (`AboutPage` model) and
+  edited from the "Admin" nav link's About tab (a plain markdown
+  textarea + Preview) — no redeploy needed to change it.
 - Auth is wired as a generic OIDC client against Keycloak — the Keycloak
   realm/client and Google/Facebook federation are not created yet (see above).
   Self-registration and optional email verification (SMTP) are supported

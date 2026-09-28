@@ -7,6 +7,10 @@
 export const MAX_TEXT_LENGTH = 500;
 export const MAX_QUANTITY = 999;
 export const MAX_PRICE = 100_000;
+// The About page is freeform admin-written markdown, not a short field —
+// 500 chars wouldn't fit a single paragraph. 20,000 is generous (a few
+// thousand words) while still bounding worst-case size.
+export const MAX_ABOUT_LENGTH = 20_000;
 
 export function isValidText(value: unknown, maxLength = MAX_TEXT_LENGTH): value is string {
   return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength;

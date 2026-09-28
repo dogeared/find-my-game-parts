@@ -22,6 +22,7 @@
     "@prisma/adapter-pg": "7.10.0",
     "pg": "8.23.0",
     "rate-limiter-flexible": "11.2.1",
+    "react-markdown": "10.1.0",
     "resend": "6.28.1"
   },
   "devDependencies": {

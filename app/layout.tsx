@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { AccessibilityToggle } from "@/components/AccessibilityToggle";
 import { NavAuth } from "@/components/NavAuth";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
@@ -18,6 +19,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SessionProviderWrapper>
           <div className="topbar">
             <nav className="topbar-nav">
+              <Link href="/about" className="btn-ghost">
+                About
+              </Link>
               <NavAuth />
             </nav>
             <div className="topbar-utility">
