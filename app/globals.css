@@ -311,7 +311,6 @@ a {
   flex-wrap: wrap;
   padding: 24px 12px;
   margin-top: 24px;
-  border-top: 3px solid var(--border);
   font-size: 13px;
   letter-spacing: 0.5px;
   opacity: 0.8;
