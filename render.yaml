@@ -63,7 +63,9 @@ services:
       # authentication method requires a client_secret" (hit live).
       - key: KEYCLOAK_ADMIN_GROUP
         value: admin
-      - key: RESEND_API_KEY
+      - key: MJ_APIKEY_PUBLIC
+        sync: false
+      - key: MJ_APIKEY_PRIVATE
         sync: false
       - key: EMAIL_FROM
         sync: false

@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-09-28
+
+### Changed
+- Switched transactional email from Resend to Mailjet — the same provider
+  Keycloak already sends through (SMTP) for this domain, so the whole
+  project now relies on one email service instead of two. No change in
+  behavior or content; only the sending mechanism changed.
+- **Deploy note**: production's `RESEND_API_KEY` env var is replaced by
+  `MJ_APIKEY_PUBLIC` and `MJ_APIKEY_PRIVATE` — these must be set on Render
+  before this version deploys, or notification emails will silently stop
+  sending (logged, not fatal) until they are.
+
 ## [1.1.0] - 2026-09-28
 
 ### Added
@@ -58,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.1.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.1.1
 [1.1.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.0.0
 [0.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.5.1

@@ -24,7 +24,9 @@ services:
       # group in Keycloak's console (README: "Admins are managed via
       # Keycloak groups").
       KEYCLOAK_ADMIN_GROUP: ${KEYCLOAK_ADMIN_GROUP:-admin}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MJ_APIKEY_PUBLIC: ${MJ_APIKEY_PUBLIC:-}
+      MJ_APIKEY_PRIVATE: ${MJ_APIKEY_PRIVATE:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
       BGG_API_BASE: https://boardgamegeek.com/xmlapi2
     volumes:
       - .:/app
