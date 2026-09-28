@@ -89,6 +89,12 @@ a {
   opacity: 0.8;
 }
 
+.bgg-attribution {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
 .theme-picker {
   display: flex;
   align-items: center;

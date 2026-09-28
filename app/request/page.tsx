@@ -4,17 +4,8 @@ import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import type { BggSearchResult } from "@/lib/bgg";
-
-// BGG's XML API now requires a registered, approved token (bgg.ts returns
-// an empty result for every search until BGG_API_TOKEN exists — see the
-// Dependencies section of the design doc). Every search currently returns
-// nothing, so: no search-as-you-type dropdown, no "no match found" message
-// (would fire on literally every keystroke, even for well-known games) —
-// just a plain freeform field. Flip this back to `true` once BGG_API_TOKEN
-// is set and bgg.ts sends it; both the search UI below and the submission
-// gate already branch on this single flag.
-const BGG_SEARCH_AVAILABLE = false;
+import { GameSearchField } from "@/components/GameSearchField";
+import { BGG_SEARCH_AVAILABLE } from "@/lib/constants";
 
 type RequestItem = {
   partDescription: string;
@@ -43,9 +34,7 @@ function RequestForm() {
   // same game. Fixed at mount; the prefill only ever happens once.
   const [gameLocked] = useState(() => Boolean(searchParams.get("gameId")));
   const [bggId, setBggId] = useState<string | null>(null);
-  const [gameQuery, setGameQuery] = useState(() => searchParams.get("title") ?? "");
   const [gameTitle, setGameTitle] = useState(() => searchParams.get("title") ?? "");
-  const [gameResults, setGameResults] = useState<BggSearchResult[]>([]);
   // Bundled part requests: one submission (one game) can carry several line
   // items, e.g. a unique card + a stack of meeples, each triaged separately
   // by the admin.
@@ -65,22 +54,13 @@ function RequestForm() {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function searchGames(query: string) {
-    setGameQuery(query);
-    setGameId(null);
-    setBggId(null);
-    if (query.trim().length < 2) {
-      setGameResults([]);
-      return;
-    }
-    const res = await fetch(`/api/games/search?query=${encodeURIComponent(query)}`);
-    if (res.ok) {
-      const data = await res.json();
-      setGameResults(data.results ?? []);
-    }
-  }
-
-  const isGameChosen = BGG_SEARCH_AVAILABLE ? Boolean(bggId) : Boolean(gameTitle.trim());
+  // gameTitle (not bggId) is the one field every path sets: arriving
+  // locked from the inventory list, picking a real BGG match, clicking
+  // "use this title anyway", and fully-freeform mode all set gameTitle —
+  // bggId only gets set on a real BGG pick, so checking it alone would
+  // block the deliberate-freeform-override path this form needs to keep
+  // working.
+  const isGameChosen = Boolean(gameTitle.trim());
   const isItemValid = (item: RequestItem) =>
     Boolean(item.partDescription.trim()) && Number.isFinite(item.quantity) && item.quantity >= 1;
   const areItemsValid = items.length > 0 && items.every(isItemValid);
@@ -88,7 +68,7 @@ function RequestForm() {
 
   const disabledReason = !isGameChosen
     ? BGG_SEARCH_AVAILABLE
-      ? "Select a game from the BGG search results to continue"
+      ? "Select a game from the search results (or use your typed title if there's no match) to continue"
       : "Enter a game to continue"
     : !areItemsValid
       ? "Describe each part and give it a valid quantity (1 or more) to continue"
@@ -162,56 +142,14 @@ function RequestForm() {
         <label>Game (required)</label>
         {gameLocked ? (
           <input type="text" value={gameTitle} disabled readOnly title="Selected from inventory — not editable" />
-        ) : BGG_SEARCH_AVAILABLE ? (
-          <>
-            <input
-              type="text"
-              value={gameQuery}
-              onChange={(e) => searchGames(e.target.value)}
-              placeholder="Start typing a title…"
-            />
-            {gameResults.length > 0 && (
-              <ul>
-                {gameResults.map((r) => (
-                  <li key={r.bggId}>
-                    <button
-                      className="btn-ghost"
-                      onClick={() => {
-                        setGameId(null);
-                        setBggId(r.bggId);
-                        setGameTitle(r.title);
-                        setGameQuery(r.title);
-                        setGameResults([]);
-                      }}
-                    >
-                      {r.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {gameResults.length === 0 && gameQuery.trim().length >= 2 && !gameId && !bggId && (
-              <p>
-                No match found —{" "}
-                <button className="btn-ghost" onClick={() => setGameTitle(gameQuery)}>
-                  use &quot;{gameQuery}&quot; anyway
-                </button>
-              </p>
-            )}
-          </>
         ) : (
-          // BGG search is down (see BGG_SEARCH_AVAILABLE above) — plain
-          // freeform input, no search call, no messaging of any kind.
-          <input
-            type="text"
-            value={gameTitle}
-            onChange={(e) => {
+          <GameSearchField
+            placeholder="Start typing a title…"
+            onChoose={(choice) => {
               setGameId(null);
-              setBggId(null);
-              setGameQuery(e.target.value);
-              setGameTitle(e.target.value);
+              setBggId(choice.bggId);
+              setGameTitle(choice.title);
             }}
-            placeholder="Type a game title…"
           />
         )}
       </div>

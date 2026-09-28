@@ -20,7 +20,7 @@ export async function GET() {
   const orders = await prisma.partOrder.findMany({
     where: { requesterId: session.user.id },
     include: {
-      game: { select: { id: true, title: true } },
+      game: { select: { id: true, title: true, bggId: true } },
       items: { orderBy: { createdAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },

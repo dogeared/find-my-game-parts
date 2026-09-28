@@ -2,6 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { CLAIM_WINDOW_MS } from "@/lib/constants";
 import { formatExtendedPrice } from "@/lib/pricing";
 
@@ -19,7 +20,7 @@ type MyItem = {
 type MyOrder = {
   id: string;
   createdAt: string;
-  game: { id: string; title: string };
+  game: { id: string; title: string; bggId: string | null };
   items: MyItem[];
 };
 
@@ -75,7 +76,17 @@ export default function MyRequestsPage() {
 
       {orders.map((order) => (
         <div key={order.id} className="panel">
-          <h3>{order.game.title}</h3>
+          <h3>
+            {order.game.title}
+            {isValidBggId(order.game.bggId) && (
+              <>
+                {" "}
+                <a href={bggGameUrl(order.game.bggId)} target="_blank" rel="noopener noreferrer">
+                  (BGG #{order.game.bggId})
+                </a>
+              </>
+            )}
+          </h3>
           <div>Submitted {new Date(order.createdAt).toLocaleString()}</div>
 
           {order.items.map((item) => (

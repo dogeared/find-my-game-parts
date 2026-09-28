@@ -5,6 +5,54 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-09-28
+
+### Added
+- Live BGG game search (`components/GameSearchField.tsx`), shared by the
+  request form and the admin's add-game form — search-as-you-type is
+  favored, with "use this title anyway" as an explicit freeform fallback
+  for a slow/down API or a title BGG doesn't recognize. A choice only
+  ever comes from a deliberate click (a real match or "use anyway"),
+  never a bare keystroke.
+- "Powered by BoardGameGeek" attribution on both search UIs, per BGG's
+  API terms — placeholder pending the exact required logo asset/wording
+  (BGG's terms/logo pages aren't reachable for automated verification;
+  to be swapped in once confirmed).
+- BGG id and a link to the game's BoardGameGeek page, shown next to the
+  game title on both admin triage and the buyer's My Requests page —
+  helps disambiguate similarly-titled games and gives quick access to
+  the game's BGG listing. Only shown when a game has a real BGG match
+  (not for manually-entered games).
+
+### Fixed
+- The admin's add-game form silently linked whatever title was typed to
+  BGG's *first* search result with no confirmation — e.g. typing "this
+  is a test" attached an unrelated game ("This Is Not a Test: Absolutely
+  Dangerous..."). Reported live once the token made this reachable for
+  the first time. Replaced with the same explicit-pick type-ahead used
+  on the request form; a game is now only linked to a BGG id the admin
+  actually clicked.
+- A game picked from the public inventory list, or confirmed via "use
+  this title anyway," would have silently failed to enable the submit
+  button once BGG search was live — the validity check required a BGG
+  match specifically (`bggId`) instead of any deliberate game choice.
+  Caught before shipping by tracing through the flag flip live.
+- BGG search results weren't decoding HTML/XML entities (e.g. `Catan:
+  Traders &amp; Barbarians`, `Collector&#039;s Edition`) — invisible
+  while the API returned nothing, confirmed live once real results
+  started flowing through the real token.
+
+### Security
+- `bggId` was accepted from client-submitted request bodies (`POST
+  /api/requests`, `POST /api/games`) with no validation, and could flow
+  into an `<a href>` on admin triage / My Requests once the BGG-link
+  display above was added — flagged by Snyk as a DOM XSS risk. Added
+  `isValidBggId` (numeric-only) validation at both write boundaries and
+  at the render sites, plus `encodeURIComponent` in the URL builder as
+  defense in depth; verified live that injection attempts (e.g.
+  `javascript:alert(1)`) are rejected with 400 while real BGG ids still
+  work.
+
 ## [1.3.1] - 2026-09-28
 
 ### Changed
@@ -100,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.0
 [1.3.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.2.0

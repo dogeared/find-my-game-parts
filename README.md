@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.3.1-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.4.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -399,7 +399,7 @@ service's **Environment** tab in the Render dashboard:
 | `KEYCLOAK_ISSUER` | `https://auth.findmygame.parts/realms/find-my-game-parts` |
 | `KEYCLOAK_PUBLIC_URL` | `https://auth.findmygame.parts` — **the same host as `KEYCLOAK_ISSUER`'s base**; unlike local dev's container-vs-host split, there's no internal network here at all, since Keycloak isn't on Render |
 | `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `EMAIL_FROM` | Your Mailjet credentials — same provider Keycloak sends through for this domain. `EMAIL_FROM=claim@findmygame.parts` — see "Two-way claim email" above for the reply-forwarding setup |
-| `BGG_API_TOKEN` | Once BGG approves your application — also needs wiring into `lib/bgg.ts` (TODOS.md tracks this) |
+| `BGG_API_TOKEN` | Your approved BGG application token (register at boardgamegeek.com/using_the_xml_api) |
 
 ### 6. Bootstrap the realm
 

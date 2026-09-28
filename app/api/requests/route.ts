@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isValidBggId } from "@/lib/bgg";
 import {
   clampQuantity,
   isValidOptionalText,
@@ -49,6 +50,9 @@ export async function POST(request: Request) {
 
   if (!gameId && !isValidText(gameTitle)) {
     return NextResponse.json({ error: "A game is required" }, { status: 400 });
+  }
+  if (bggId && !isValidBggId(bggId)) {
+    return NextResponse.json({ error: "Invalid BGG id" }, { status: 400 });
   }
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: "At least one part is required" }, { status: 400 });
