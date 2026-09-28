@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   is lost.
 - Buyer notification emails now summarize the whole order's outcome in one
   message instead of sending one email per part.
+- Moved request triage off its own nav link (`/admin/requests`) and into a
+  "Requests" tab on the admin page, alongside Inventory and About.
 
 ## [0.5.1] - 2026-09-28
 

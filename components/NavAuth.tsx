@@ -23,14 +23,9 @@ export function NavAuth() {
   return (
     <>
       {session.user.isAdmin && (
-        <>
-          <Link href="/admin/requests" className="btn-ghost">
-            Requests
-          </Link>
-          <Link href="/admin" className="btn-ghost">
-            Admin
-          </Link>
-        </>
+        <Link href="/admin" className="btn-ghost">
+          Admin
+        </Link>
       )}
       <button className="btn-ghost" onClick={() => signOut()}>
         Sign out
