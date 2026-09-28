@@ -145,3 +145,55 @@ a,
   font-family: "Courier New", Courier, monospace;
   color: var(--ink);
 }
+
+/* "New user? Register" — login.ftl renders this as a plain <span>New
+   user? <a>Register</a></span> in the footer, right after the Sign In
+   form, with no pf-v5-c-button classes to hook into (confirmed against
+   the live rendered page, not the FTL source alone) — so the button
+   look is built here directly rather than reusing an existing class.
+   Not forking the template to restructure the markup itself keeps this
+   theme CSS-only; the "New user?" text stays as a small label above the
+   button since it's a sibling text node before the <a>, not part of it. */
+#kc-registration-container {
+  margin-top: 16px;
+}
+
+#kc-registration {
+  text-align: center;
+}
+
+#kc-registration span {
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+#kc-registration a {
+  display: block;
+  margin-top: 8px;
+  padding: 12px 18px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  background: var(--bg);
+  color: var(--ink);
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--border);
+}
+
+#kc-registration a:hover,
+#kc-registration a:focus {
+  color: var(--ink);
+}
+
+#kc-registration a:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
