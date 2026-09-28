@@ -19,7 +19,11 @@ const mailjet =
   process.env.MJ_APIKEY_PUBLIC && process.env.MJ_APIKEY_PRIVATE
     ? new Client({ apiKey: process.env.MJ_APIKEY_PUBLIC, apiSecret: process.env.MJ_APIKEY_PRIVATE })
     : null;
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? "noreply@findmygame.parts";
+// claim@ (not noreply@) — buyers can reply to arrange payment/shipping;
+// the reply lands in a real inbox via Cloudflare Email Routing, and the
+// admin's reply back goes out under this same address via the email
+// provider's "send as" alias feature (see README's "Two-way claim email").
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? "claim@findmygame.parts";
 
 export type OrderEmailItem = {
   partDescription: string;

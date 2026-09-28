@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-09-28
+
+### Changed
+- Claim notification emails now send from `claim@findmygame.parts`
+  instead of `noreply@findmygame.parts` — buyer replies land in a real
+  inbox via Cloudflare Email Routing, and admin replies go out under the
+  same address via the email provider's "send as" alias feature. No
+  Mailjet-side configuration needed (any address on a verified domain
+  works immediately).
+
+### Added
+- README: "Two-way claim email" section documenting the Cloudflare Email
+  Routing setup, the email-provider "send as" alias steps, and the
+  `EMAIL_FROM` app config.
+
 ## [1.3.0] - 2026-09-28
 
 ### Added
@@ -85,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.3.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.2.0
 [1.1.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.1.0
