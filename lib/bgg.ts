@@ -7,6 +7,12 @@ export type BggSearchResult = {
   title: string;
 };
 
+// Shared everywhere a game's BGG id is shown as a link (admin triage,
+// buyer's My Requests) so the URL shape only needs to be right once.
+export function bggGameUrl(bggId: string): string {
+  return `https://boardgamegeek.com/boardgame/${bggId}`;
+}
+
 const BGG_API_BASE = process.env.BGG_API_BASE ?? "https://boardgamegeek.com/xmlapi2";
 const LOOKUP_TIMEOUT_MS = 4000;
 

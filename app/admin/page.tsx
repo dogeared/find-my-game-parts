@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { bggGameUrl } from "@/lib/bgg";
 import { formatExtendedPrice } from "@/lib/pricing";
 
 type Game = { id: string; title: string; bggId: string | null; inStock: boolean };
@@ -127,7 +128,7 @@ type AdminItem = {
 type AdminOrder = {
   id: string;
   gameId: string;
-  game: { id: string; title: string };
+  game: { id: string; title: string; bggId: string | null };
   requester: { email: string };
   createdAt: string;
   items: AdminItem[];
@@ -223,14 +224,13 @@ function RequestsTab() {
   // Grouped by game, in the order the API already returns (gameId asc, then
   // createdAt asc) — no automatic part-bucket grouping (office-hours R3-1);
   // the admin reads this chronologically and uses judgment.
-  const byGame = orders.reduce<Record<string, { title: string; orders: AdminOrder[] }>>(
-    (acc, order) => {
-      acc[order.gameId] ??= { title: order.game.title, orders: [] };
-      acc[order.gameId].orders.push(order);
-      return acc;
-    },
-    {}
-  );
+  const byGame = orders.reduce<
+    Record<string, { title: string; bggId: string | null; orders: AdminOrder[] }>
+  >((acc, order) => {
+    acc[order.gameId] ??= { title: order.game.title, bggId: order.game.bggId, orders: [] };
+    acc[order.gameId].orders.push(order);
+    return acc;
+  }, {});
 
   return (
     <>
@@ -256,9 +256,19 @@ function RequestsTab() {
         </div>
       )}
 
-      {Object.entries(byGame).map(([gameId, { title, orders: gameOrders }]) => (
+      {Object.entries(byGame).map(([gameId, { title, bggId, orders: gameOrders }]) => (
         <div key={gameId} className="panel">
-          <h3>{title}</h3>
+          <h3>
+            {title}
+            {bggId && (
+              <>
+                {" "}
+                <a href={bggGameUrl(bggId)} target="_blank" rel="noopener noreferrer">
+                  (BGG #{bggId})
+                </a>
+              </>
+            )}
+          </h3>
           {gameOrders.map((order) => (
             <div key={order.id} className="game-row game-row--stacked">
               <div>

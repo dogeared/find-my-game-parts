@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-09-28
+
+### Added
+- BGG id and a link to the game's BoardGameGeek page, shown next to the
+  game title on both admin triage and the buyer's My Requests page —
+  helps disambiguate similarly-titled games and gives quick access to
+  the game's BGG listing. Only shown when a game has a real BGG match
+  (not for manually-entered games).
+
 ## [1.4.0] - 2026-09-28
 
 ### Added
@@ -125,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.4.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.1
 [1.4.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.4.0
 [1.3.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
