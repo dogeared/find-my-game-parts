@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { prisma } from "@/lib/prisma";
 
 // Inventory changes in real time (admin toggles availability) — never
@@ -10,7 +11,7 @@ export default async function HomePage() {
   // (Architecture Review AR-4 / TODOS.md: PII-safe public read model).
   const games = await prisma.game.findMany({
     where: { inStock: true },
-    select: { id: true, title: true },
+    select: { id: true, title: true, bggId: true },
     orderBy: { title: "asc" },
   });
 
@@ -36,7 +37,17 @@ export default async function HomePage() {
       ) : (
         games.map((game) => (
           <div className="game-row" key={game.id}>
-            <span>{game.title}</span>
+            <span>
+              {game.title}
+              {isValidBggId(game.bggId) && (
+                <>
+                  {" "}
+                  <a href={bggGameUrl(game.bggId)} target="_blank" rel="noopener noreferrer">
+                    (BGG #{game.bggId})
+                  </a>
+                </>
+              )}
+            </span>
             <Link
               href={`/request?gameId=${game.id}&title=${encodeURIComponent(game.title)}`}
               className="btn btn-ghost"
