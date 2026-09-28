@@ -8,16 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [1.4.0] - 2026-09-28
 
 ### Added
-- Live BGG game search on the request form, now that BGG has approved
-  this app's API token — search-as-you-type is favored, with "use this
-  title anyway" kept as an explicit freeform fallback for a slow/down API
-  or a title BGG doesn't recognize. Same fallback used by the admin's
-  inventory-add flow already, now actually reachable since the token
-  works.
-- "Powered by BoardGameGeek" attribution on the request form's search UI,
-  per BGG's API terms — placeholder pending the exact required logo
-  asset/wording (BGG's terms/logo pages aren't reachable for automated
-  verification; to be swapped in once confirmed).
+- Live BGG game search (`components/GameSearchField.tsx`), shared by the
+  request form and the admin's add-game form — search-as-you-type is
+  favored, with "use this title anyway" as an explicit freeform fallback
+  for a slow/down API or a title BGG doesn't recognize. A choice only
+  ever comes from a deliberate click (a real match or "use anyway"),
+  never a bare keystroke.
+- "Powered by BoardGameGeek" attribution on both search UIs, per BGG's
+  API terms — placeholder pending the exact required logo asset/wording
+  (BGG's terms/logo pages aren't reachable for automated verification;
+  to be swapped in once confirmed).
 - BGG id and a link to the game's BoardGameGeek page, shown next to the
   game title on both admin triage and the buyer's My Requests page —
   helps disambiguate similarly-titled games and gives quick access to
@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (not for manually-entered games).
 
 ### Fixed
+- The admin's add-game form silently linked whatever title was typed to
+  BGG's *first* search result with no confirmation — e.g. typing "this
+  is a test" attached an unrelated game ("This Is Not a Test: Absolutely
+  Dangerous..."). Reported live once the token made this reachable for
+  the first time. Replaced with the same explicit-pick type-ahead used
+  on the request form; a game is now only linked to a BGG id the admin
+  actually clicked.
 - A game picked from the public inventory list, or confirmed via "use
   this title anyway," would have silently failed to enable the submit
   button once BGG search was live — the validity check required a BGG

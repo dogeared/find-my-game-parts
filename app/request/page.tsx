@@ -4,15 +4,8 @@ import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { BggAttribution } from "@/components/BggAttribution";
-import type { BggSearchResult } from "@/lib/bgg";
-
-// BGG approved the application's API token 2026-09-28 (bgg.ts sends it as
-// a Bearer header) — live search-as-you-type is favored, with "use this
-// title anyway" as an explicit freeform fallback when BGG has no match or
-// is slow/down. Both the search UI below and the submission gate branch
-// on this single flag.
-const BGG_SEARCH_AVAILABLE = true;
+import { GameSearchField } from "@/components/GameSearchField";
+import { BGG_SEARCH_AVAILABLE } from "@/lib/constants";
 
 type RequestItem = {
   partDescription: string;
@@ -41,9 +34,7 @@ function RequestForm() {
   // same game. Fixed at mount; the prefill only ever happens once.
   const [gameLocked] = useState(() => Boolean(searchParams.get("gameId")));
   const [bggId, setBggId] = useState<string | null>(null);
-  const [gameQuery, setGameQuery] = useState(() => searchParams.get("title") ?? "");
   const [gameTitle, setGameTitle] = useState(() => searchParams.get("title") ?? "");
-  const [gameResults, setGameResults] = useState<BggSearchResult[]>([]);
   // Bundled part requests: one submission (one game) can carry several line
   // items, e.g. a unique card + a stack of meeples, each triaged separately
   // by the admin.
@@ -61,21 +52,6 @@ function RequestForm() {
 
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  async function searchGames(query: string) {
-    setGameQuery(query);
-    setGameId(null);
-    setBggId(null);
-    if (query.trim().length < 2) {
-      setGameResults([]);
-      return;
-    }
-    const res = await fetch(`/api/games/search?query=${encodeURIComponent(query)}`);
-    if (res.ok) {
-      const data = await res.json();
-      setGameResults(data.results ?? []);
-    }
   }
 
   // gameTitle (not bggId) is the one field every path sets: arriving
@@ -166,57 +142,14 @@ function RequestForm() {
         <label>Game (required)</label>
         {gameLocked ? (
           <input type="text" value={gameTitle} disabled readOnly title="Selected from inventory — not editable" />
-        ) : BGG_SEARCH_AVAILABLE ? (
-          <>
-            <input
-              type="text"
-              value={gameQuery}
-              onChange={(e) => searchGames(e.target.value)}
-              placeholder="Start typing a title…"
-            />
-            {gameResults.length > 0 && (
-              <ul>
-                {gameResults.map((r) => (
-                  <li key={r.bggId}>
-                    <button
-                      className="btn-ghost"
-                      onClick={() => {
-                        setGameId(null);
-                        setBggId(r.bggId);
-                        setGameTitle(r.title);
-                        setGameQuery(r.title);
-                        setGameResults([]);
-                      }}
-                    >
-                      {r.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {gameResults.length === 0 && gameQuery.trim().length >= 2 && !gameId && !bggId && (
-              <p>
-                No match found —{" "}
-                <button className="btn-ghost" onClick={() => setGameTitle(gameQuery)}>
-                  use &quot;{gameQuery}&quot; anyway
-                </button>
-              </p>
-            )}
-            <BggAttribution />
-          </>
         ) : (
-          // BGG search is down (see BGG_SEARCH_AVAILABLE above) — plain
-          // freeform input, no search call, no messaging of any kind.
-          <input
-            type="text"
-            value={gameTitle}
-            onChange={(e) => {
+          <GameSearchField
+            placeholder="Start typing a title…"
+            onChoose={(choice) => {
               setGameId(null);
-              setBggId(null);
-              setGameQuery(e.target.value);
-              setGameTitle(e.target.value);
+              setBggId(choice.bggId);
+              setGameTitle(choice.title);
             }}
-            placeholder="Type a game title…"
           />
         )}
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isValidBggId, searchBggGames } from "@/lib/bgg";
+import { isValidBggId } from "@/lib/bgg";
 import { isValidText } from "@/lib/validation";
 
 // Public callers see only in-stock games. Admins see everything (including
@@ -21,8 +21,11 @@ export async function GET() {
   return NextResponse.json({ games });
 }
 
-// Admin-only: add a game via BGG lookup, with manual fallback if the
-// lookup fails/returns nothing (Dependencies in the design doc).
+// Admin-only: add a game. bggId comes only from the admin explicitly
+// picking a GameSearchField result or confirming "use this title anyway"
+// (never guessed server-side — a prior version silently took the first
+// BGG search hit for whatever title was typed, which linked completely
+// unrelated games; see CHANGELOG).
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) {
@@ -39,14 +42,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid BGG id" }, { status: 400 });
   }
 
-  let resolvedBggId = bggId ?? null;
-  if (!resolvedBggId) {
-    const [match] = await searchBggGames(title);
-    resolvedBggId = match?.bggId ?? null; // null is fine — manual fallback path
-  }
-
   const game = await prisma.game.create({
-    data: { title: title.trim(), bggId: resolvedBggId, inStock: true },
+    data: { title: title.trim(), bggId: bggId ?? null, inStock: true },
   });
 
   return NextResponse.json({ game }, { status: 201 });

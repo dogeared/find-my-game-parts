@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { GameSearchField } from "@/components/GameSearchField";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { formatExtendedPrice } from "@/lib/pricing";
@@ -43,7 +44,16 @@ export default function AdminPage() {
 
 function InventoryTab() {
   const [games, setGames] = useState<Game[]>([]);
-  const [title, setTitle] = useState("");
+  // Set only via GameSearchField's onChoose — a deliberate pick or an
+  // explicit "use this title anyway", never a silent server-side guess.
+  // The bug this replaced: the old add-game route took whatever title the
+  // admin typed and searched BGG for it server-side, taking the first
+  // result as a match with no confirmation — e.g. typing "this is a test"
+  // silently linked the game to an unrelated BGG entry.
+  const [choice, setChoice] = useState<{ bggId: string | null; title: string } | null>(null);
+  // Remounts GameSearchField after a successful add so its internal
+  // query/results state resets — it has no external reset prop.
+  const [searchKey, setSearchKey] = useState(0);
 
   async function loadGames() {
     const res = await fetch("/api/games");
@@ -59,14 +69,15 @@ function InventoryTab() {
   }, []);
 
   async function addGame() {
-    if (!title.trim()) return;
+    if (!choice?.title.trim()) return;
     const res = await fetch("/api/games", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ title: choice.title, bggId: choice.bggId }),
     });
     if (res.ok) {
-      setTitle("");
+      setChoice(null);
+      setSearchKey((k) => k + 1);
       loadGames();
     }
   }
@@ -85,15 +96,10 @@ function InventoryTab() {
       <h2>Manage inventory</h2>
 
       <div className="field">
-        <label>Add a game (BGG lookup, with manual fallback)</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Game title"
-        />
+        <label>Add a game (search BGG, or use your typed title if there&apos;s no match)</label>
+        <GameSearchField key={searchKey} placeholder="Game title" onChoose={setChoice} />
       </div>
-      <button className="btn" onClick={addGame}>
+      <button className="btn" onClick={addGame} disabled={!choice?.title.trim()}>
         Add game →
       </button>
 
