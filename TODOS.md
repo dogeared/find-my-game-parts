@@ -2,6 +2,18 @@
 
 ## Find My Game Parts
 
+### Notification log
+
+**What:** Add a way for an admin to review notification emails that have already been sent — at minimum, per order/item: recipient, timestamp, and whether it succeeded, surfaced somewhere in the admin UI.
+
+**Why:** Now that notifications can fire two ways (automatically once an order is fully triaged, or manually via the "Send notification" button — see `lib/notifications.ts`), the admin has no way to check afterward what was actually sent or whether a send failed. Right now failures only go to server logs (`console.error` in `app/api/admin/requests/[id]/route.ts` and the notify route), which an admin can't see.
+
+**Context:** Named directly by the founder when the manual/automatic notification split was built. Likely needs a small `NotificationLog` model (orderId, sentAt, sentTo, succeeded) written to from `lib/notifications.ts`'s `notifyOrder`, plus a read-only view in the admin page.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** None
+
 ### Wire up the approved BGG API token
 
 **What:** Once BGG approves the application (submitted 2026-09-27), add `BGG_API_TOKEN` to `.env`/`docker-compose.yml`, send it as `Authorization: Bearer <token>` in `lib/bgg.ts`'s `fetch` call, and flip `REQUIRE_BGG_MATCH` back to `true` in `app/request/page.tsx`.

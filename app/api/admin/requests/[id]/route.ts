@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sendOrderResponseEmail } from "@/lib/email";
+import { notifyOrder } from "@/lib/notifications";
 import { isValidPrice } from "@/lib/validation";
 
 type PatchBody = {
@@ -17,6 +17,12 @@ type PatchBody = {
 // not-available). Marking AVAILABLE starts the 5-day claim window
 // (lib/claims.ts) for THIS item only — other items in the same order keep
 // their own independent status/clock.
+//
+// Notification: the buyer is emailed automatically only once every item in
+// the order has been decided (no PENDING items left) — not after every
+// single item, which would spam a multi-item order with one email per
+// decision. Before that point, the admin can still notify manually at any
+// time via POST /api/admin/orders/[orderId]/notify.
 //
 // Double-approve guard (Architecture Review AR-1 / D2): this does NOT
 // prevent a true simultaneous double-approval in two browser tabs — it
@@ -38,7 +44,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const existing = await prisma.partRequest.findUnique({
     where: { id },
-    include: { order: { include: { game: true, requester: true } } },
+    include: { order: true },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -64,26 +70,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   });
 
   let otherPendingForGame: Array<{ id: string; partDescription: string; createdAt: Date }> = [];
+  let orderNotified = false;
 
   if (body.status) {
-    const orderItems = await prisma.partRequest.findMany({
+    const orderItemStatuses = await prisma.partRequest.findMany({
       where: { orderId: existing.orderId },
-      orderBy: { createdAt: "asc" },
+      select: { status: true },
     });
+    const allDecided = orderItemStatuses.every((item) => item.status !== "PENDING");
 
-    const { sent } = await sendOrderResponseEmail({
-      to: existing.order.requester.email,
-      gameTitle: existing.order.game.title,
-      items: orderItems.map((item) => ({
-        partDescription: item.partDescription,
-        quantityRequested: item.quantityRequested,
-        status: item.status,
-        quantityAvailable: item.quantityAvailable,
-        price: item.price?.toString() ?? null,
-      })),
-    });
-    if (!sent) {
-      console.error(`Notification email failed for order ${existing.orderId} — buyer not informed`);
+    if (allDecided) {
+      const { sent } = await notifyOrder(existing.orderId);
+      orderNotified = sent;
+      if (!sent) {
+        console.error(`Notification email failed for order ${existing.orderId} — buyer not informed`);
+      }
     }
 
     if (body.status === "AVAILABLE") {
@@ -95,5 +96,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
-  return NextResponse.json({ request: updated, otherPendingForGame });
+  return NextResponse.json({ request: updated, otherPendingForGame, orderNotified });
 }
