@@ -64,6 +64,7 @@ body {
 
 a {
   color: var(--accent-2);
+  text-decoration: none;
 }
 
 .topbar {
