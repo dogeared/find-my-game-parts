@@ -32,7 +32,6 @@ export function NavAuth() {
           </Link>
         </>
       )}
-      <span className="nav-user">{session.user.name ?? session.user.email}</span>
       <button className="btn-ghost" onClick={() => signOut()}>
         Sign out
       </button>

@@ -198,6 +198,19 @@ a {
   border-style: dashed;
 }
 
+/* The About tab's preview box (app/admin/page.tsx) — needs its own
+   border width/color since it doesn't use the full .panel class (that
+   would nest a second bordered/shadowed box inside the admin page's own
+   .panel, which looked redundant); border-style comes from .panel-dashed
+   above, set separately (not via the `border` shorthand) so this doesn't
+   fight that class regardless of CSS source order. */
+.about-preview {
+  margin: 16px 0;
+  padding: 20px;
+  border-width: 3px;
+  border-color: var(--border);
+}
+
 .error-text {
   color: var(--accent);
 }

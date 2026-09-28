@@ -1,7 +1,8 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.5.1-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Concierge MVP for sourcing replacement board game parts. Full design context: [`docs/designs/find-my-game-parts.md`](docs/designs/find-my-game-parts.md).
 
@@ -415,3 +416,8 @@ docker run --rm -v "$PWD":/app -w /app node:22-slim npx eslint .
   not a leftover.)
 - Deployment: app + database on Render (`render.yaml`), Keycloak
   self-hosted separately (see "Production deployment").
+
+## License
+
+[MIT](LICENSE) — fork it, self-host it, adapt it for your own game
+collection. Contributions welcome.
