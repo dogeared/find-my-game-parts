@@ -5,6 +5,7 @@ import { AccessibilityToggle } from "@/components/AccessibilityToggle";
 import { NavAuth } from "@/components/NavAuth";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 import { ThemePicker } from "@/components/ThemePicker";
+import { UserBadge } from "@/components/UserBadge";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,6 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SessionProviderWrapper>
           <div className="topbar">
             <nav className="topbar-nav">
+              <UserBadge />
+              <Link href="/" className="btn-ghost">
+                Home
+              </Link>
               <Link href="/about" className="btn-ghost">
                 About
               </Link>

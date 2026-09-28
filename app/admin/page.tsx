@@ -138,7 +138,7 @@ function AboutTab() {
       <h2>Edit the About page</h2>
 
       {previewing ? (
-        <div className="panel-dashed">
+        <div className="about-preview panel-dashed">
           <MarkdownContent markdown={markdown} />
         </div>
       ) : (
