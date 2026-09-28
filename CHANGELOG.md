@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   logo's own text legible, checked visually at 20/24/28/32px before
   picking this.
 
+### Fixed
+- Typing fast in the BGG game search could get "stuck" showing results
+  for an earlier, shorter query instead of what was actually typed —
+  reported live. Root cause: a fetch fired on every keystroke with no
+  cancellation, so an older response could arrive after a newer one and
+  silently overwrite it. `components/GameSearchField.tsx` now aborts the
+  previous in-flight request on every new keystroke; verified with a
+  standalone simulation of the exact race (confirmed it reproduces the
+  bug without the fix, and resolves correctly with it).
+
 ## [1.5.0] - 2026-09-28
 
 ### Added
