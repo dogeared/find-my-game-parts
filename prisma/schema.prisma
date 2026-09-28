@@ -20,6 +20,15 @@ model User {
   requests    PartRequest[]
 }
 
+// Singleton (fixed id) — admin-editable via /admin's About tab, rendered
+// at the public /about route. Storing this in the DB rather than a file
+// is what lets an admin update it without a redeploy.
+model AboutPage {
+  id        String   @id @default("about")
+  markdown  String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 model Game {
   id        String        @id @default(cuid())
   bggId     String? // null when added via the manual fallback (BGG lookup failed/slow)
