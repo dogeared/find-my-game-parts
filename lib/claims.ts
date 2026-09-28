@@ -1,13 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { CLAIM_WINDOW_MS } from "@/lib/constants";
 
-// 5-day claim window (outside-voice finding #5, plan-eng-review): if the
-// earliest requester for a scarce/unique part doesn't confirm and pay
-// within 5 days of being notified, the claim passes to the next-earliest
-// pending request for that same game. Checked on read rather than a real
-// background job — consistent with the MVP's manual-everything philosophy;
-// a real cron-based expiry is a TODOS.md-worthy follow-up if this matters
-// at higher volume.
-const CLAIM_WINDOW_MS = 5 * 24 * 60 * 60 * 1000;
+// Checked on read rather than a real background job — consistent with the
+// MVP's manual-everything philosophy; a real cron-based expiry is a
+// TODOS.md-worthy follow-up if this matters at higher volume.
 
 export async function expireStaleClaims(): Promise<number> {
   const cutoff = new Date(Date.now() - CLAIM_WINDOW_MS);

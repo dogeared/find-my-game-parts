@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, signIn } from "next-auth/react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { BggSearchResult } from "@/lib/bgg";
@@ -146,6 +147,9 @@ function RequestForm() {
       <main className="panel">
         <h2>Got it.</h2>
         <p>You&apos;ll get a reply once I check what&apos;s on hand.</p>
+        <p>
+          <Link href="/my-requests">Track this request →</Link>
+        </p>
       </main>
     );
   }

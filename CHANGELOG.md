@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-09-28
+
+### Added
+- "My Requests" page — signed-in users can see their own orders, each
+  line item's current status, and when it was last updated, instead of
+  relying solely on email.
+- Available line items now show their claim-by deadline (5 days from
+  approval) on both the request confirmation flow and My Requests.
+
+### Changed
+- Admin triage no longer uses `window.prompt()` for price/quantity —
+  they're now inline fields on each pending line item, so marking an item
+  available with a reduced quantity is one action instead of two prompts.
+
 ## [1.0.0] - 2026-09-28
 
 ### Added
@@ -39,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.1.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.0.0
 [0.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.5.1
 

@@ -175,7 +175,8 @@ a {
   color: var(--ink);
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn-ghost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

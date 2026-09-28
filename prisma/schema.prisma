@@ -91,6 +91,7 @@ model PartRequest {
   price             Decimal?       @db.Decimal(10, 2) // set by admin when marking AVAILABLE
   claimedAt         DateTime? // when marked AVAILABLE; the 5-day claim window starts here
   createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt // last status change — shown to the buyer on /my-requests
 
   @@index([orderId])
   @@index([status])

@@ -22,6 +22,9 @@ export function NavAuth() {
 
   return (
     <>
+      <Link href="/my-requests" className="btn-ghost">
+        My Requests
+      </Link>
       {session.user.isAdmin && (
         <Link href="/admin" className="btn-ghost">
           Admin

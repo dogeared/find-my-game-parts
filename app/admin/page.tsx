@@ -132,6 +132,8 @@ type AdminOrder = {
   items: AdminItem[];
 };
 
+type AvailabilityDraft = { price: string; quantityAvailable: number };
+
 function RequestsTab() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   // Double-approve nudge (Architecture Review AR-1 / D2): other still-pending
@@ -140,6 +142,18 @@ function RequestsTab() {
     approvedId: string;
     others: Array<{ id: string; partDescription: string; createdAt: string }>;
   } | null>(null);
+  // Draft price/quantity per pending item, keyed by item id — lets the admin
+  // adjust both before submitting a single "mark available" action instead
+  // of two sequential window.prompt() calls.
+  const [drafts, setDrafts] = useState<Record<string, AvailabilityDraft>>({});
+
+  function draftFor(item: AdminItem): AvailabilityDraft {
+    return drafts[item.id] ?? { price: "", quantityAvailable: item.quantityRequested };
+  }
+
+  function updateDraft(item: AdminItem, patch: Partial<AvailabilityDraft>) {
+    setDrafts((prev) => ({ ...prev, [item.id]: { ...draftFor(item), ...patch } }));
+  }
 
   async function loadOrders() {
     const res = await fetch("/api/admin/requests");
@@ -177,18 +191,16 @@ function RequestsTab() {
   }
 
   function markAvailable(item: AdminItem) {
-    const price = window.prompt("Price?");
-    if (price === null) return;
-    let quantityAvailable = item.quantityRequested;
-    if (item.quantityRequested > 1) {
-      const qtyInput = window.prompt(
-        `How many of the ${item.quantityRequested} requested do you have?`,
-        String(item.quantityRequested)
-      );
-      if (qtyInput === null) return;
-      quantityAvailable = Number(qtyInput);
-    }
-    patchItem(item.id, { status: "AVAILABLE", price, quantityAvailable });
+    const draft = draftFor(item);
+    patchItem(item.id, {
+      status: "AVAILABLE",
+      price: draft.price,
+      quantityAvailable: draft.quantityAvailable,
+    });
+    setDrafts((prev) => {
+      const { [item.id]: _removed, ...rest } = prev;
+      return rest;
+    });
   }
 
   // Grouped by game, in the order the API already returns (gameId asc, then
@@ -267,12 +279,39 @@ function RequestsTab() {
                   </div>
                   {item.status === "PENDING" && (
                     <div>
-                      <button className="btn-ghost" onClick={() => markAvailable(item)}>
-                        Mark available
-                      </button>
-                      <button className="btn-ghost" onClick={() => markNotAvailable(item.id)}>
-                        Mark not available
-                      </button>
+                      <label>
+                        Price:{" "}
+                        <input
+                          type="text"
+                          value={draftFor(item).price}
+                          onChange={(e) => updateDraft(item, { price: e.target.value })}
+                          placeholder="$10"
+                        />
+                      </label>{" "}
+                      {item.quantityRequested > 1 && (
+                        <label>
+                          Qty available (of {item.quantityRequested}):{" "}
+                          <input
+                            type="number"
+                            min={1}
+                            max={item.quantityRequested}
+                            value={draftFor(item).quantityAvailable}
+                            onChange={(e) => updateDraft(item, { quantityAvailable: Number(e.target.value) })}
+                          />
+                        </label>
+                      )}
+                      <div>
+                        <button
+                          className="btn-ghost"
+                          onClick={() => markAvailable(item)}
+                          disabled={!draftFor(item).price.trim()}
+                        >
+                          Mark available
+                        </button>
+                        <button className="btn-ghost" onClick={() => markNotAvailable(item.id)}>
+                          Mark not available
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
