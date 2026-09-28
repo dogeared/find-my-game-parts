@@ -15,7 +15,7 @@ export function NavAuth() {
   if (!session) {
     return (
       <button className="btn-ghost" onClick={() => signIn("keycloak")}>
-        Sign in
+        Sign in / Sign up
       </button>
     );
   }
