@@ -2,24 +2,27 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sendRequestResponseEmail } from "@/lib/email";
+import { sendOrderResponseEmail } from "@/lib/email";
 import { isValidPrice } from "@/lib/validation";
 
 type PatchBody = {
   criticalityTag?: "UNIQUE" | "FUNGIBLE";
   status?: "AVAILABLE" | "NOT_AVAILABLE";
   price?: string;
+  quantityAvailable?: number;
 };
 
-// Admin-only: triage a single request (set the criticality tag, and/or
-// respond available+price or not-available). Marking AVAILABLE starts the
-// 5-day claim window (lib/claims.ts).
+// Admin-only: triage a single line item within an order (set the
+// criticality tag, and/or respond available+price+quantity or
+// not-available). Marking AVAILABLE starts the 5-day claim window
+// (lib/claims.ts) for THIS item only — other items in the same order keep
+// their own independent status/clock.
 //
 // Double-approve guard (Architecture Review AR-1 / D2): this does NOT
 // prevent a true simultaneous double-approval in two browser tabs — it
-// returns the other still-pending requests for the same game so the admin
-// UI can nudge a cleanup right after approval, which covers the far more
-// common "forgot this was already claimed" case.
+// returns the other still-pending items for the same game (across orders)
+// so the admin UI can nudge a cleanup right after approval, which covers
+// the far more common "forgot this was already claimed" case.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) {
@@ -35,40 +38,57 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const existing = await prisma.partRequest.findUnique({
     where: { id },
-    include: { game: true, requester: true },
+    include: { order: { include: { game: true, requester: true } } },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  const quantityAvailable =
+    body.status === "AVAILABLE"
+      ? Math.min(
+          Math.max(Math.trunc(body.quantityAvailable ?? existing.quantityRequested), 1),
+          existing.quantityRequested
+        )
+      : undefined;
 
   const updated = await prisma.partRequest.update({
     where: { id },
     data: {
       ...(body.criticalityTag ? { criticalityTag: body.criticalityTag } : {}),
       ...(body.status === "AVAILABLE"
-        ? { status: "AVAILABLE", price: body.price ?? null, claimedAt: new Date() }
+        ? { status: "AVAILABLE", price: body.price ?? null, quantityAvailable, claimedAt: new Date() }
         : {}),
-      ...(body.status === "NOT_AVAILABLE" ? { status: "NOT_AVAILABLE" } : {}),
+      ...(body.status === "NOT_AVAILABLE" ? { status: "NOT_AVAILABLE", quantityAvailable: 0 } : {}),
     },
   });
 
   let otherPendingForGame: Array<{ id: string; partDescription: string; createdAt: Date }> = [];
 
   if (body.status) {
-    const { sent } = await sendRequestResponseEmail({
-      to: existing.requester.email,
-      gameTitle: existing.game.title,
-      partDescription: existing.partDescription,
-      status: body.status,
-      price: body.price,
+    const orderItems = await prisma.partRequest.findMany({
+      where: { orderId: existing.orderId },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const { sent } = await sendOrderResponseEmail({
+      to: existing.order.requester.email,
+      gameTitle: existing.order.game.title,
+      items: orderItems.map((item) => ({
+        partDescription: item.partDescription,
+        quantityRequested: item.quantityRequested,
+        status: item.status,
+        quantityAvailable: item.quantityAvailable,
+        price: item.price?.toString() ?? null,
+      })),
     });
     if (!sent) {
-      console.error(`Notification email failed for request ${id} — buyer not informed`);
+      console.error(`Notification email failed for order ${existing.orderId} — buyer not informed`);
     }
 
     if (body.status === "AVAILABLE") {
       otherPendingForGame = await prisma.partRequest.findMany({
-        where: { gameId: existing.gameId, status: "PENDING", id: { not: id } },
+        where: { order: { gameId: existing.order.gameId }, status: "PENDING", id: { not: id } },
         select: { id: true, partDescription: true, createdAt: true },
         orderBy: { createdAt: "asc" },
       });

@@ -19,7 +19,7 @@ export async function expireStaleClaims(): Promise<number> {
   for (const request of expired) {
     await prisma.partRequest.update({
       where: { id: request.id },
-      data: { status: "PENDING", claimedAt: null, price: null },
+      data: { status: "PENDING", claimedAt: null, price: null, quantityAvailable: null },
     });
   }
 

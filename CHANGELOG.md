@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-09-28
+
+### Added
+- Bundled part requests: a single submission for one game can now carry
+  multiple line items (e.g. a unique card + a stack of meeples) instead of
+  one request per part.
+- Admins triage each line item independently — mark it available or not,
+  and adjust the fulfilled quantity down from what was requested (e.g. 5 of
+  10 meeples in stock).
+
+### Changed
+- **Breaking data model change**: `PartRequest` is now a line item under a
+  new `PartOrder` (game + requester + submission time). Every existing
+  request is migrated automatically into its own one-item order — no data
+  is lost.
+- Buyer notification emails now summarize the whole order's outcome in one
+  message instead of sending one email per part.
+
 ## [0.5.1] - 2026-09-28
 
 ### Added
@@ -17,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.0.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.0.0
 [0.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.5.1
 
 ## [0.5.0] - 2026-09-28

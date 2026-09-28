@@ -15,6 +15,17 @@ import type { BggSearchResult } from "@/lib/bgg";
 // gate already branch on this single flag.
 const BGG_SEARCH_AVAILABLE = false;
 
+type RequestItem = {
+  partDescription: string;
+  quantity: number;
+  editionNote: string;
+  maxPrice: string;
+};
+
+function emptyItem(): RequestItem {
+  return { partDescription: "", quantity: 1, editionNote: "", maxPrice: "" };
+}
+
 function RequestForm() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
@@ -34,12 +45,24 @@ function RequestForm() {
   const [gameQuery, setGameQuery] = useState(() => searchParams.get("title") ?? "");
   const [gameTitle, setGameTitle] = useState(() => searchParams.get("title") ?? "");
   const [gameResults, setGameResults] = useState<BggSearchResult[]>([]);
-  const [partDescription, setPartDescription] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [editionNote, setEditionNote] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  // Bundled part requests: one submission (one game) can carry several line
+  // items, e.g. a unique card + a stack of meeples, each triaged separately
+  // by the admin.
+  const [items, setItems] = useState<RequestItem[]>([emptyItem()]);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function updateItem(index: number, patch: Partial<RequestItem>) {
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  }
+
+  function addItem() {
+    setItems((prev) => [...prev, emptyItem()]);
+  }
+
+  function removeItem(index: number) {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function searchGames(query: string) {
     setGameQuery(query);
@@ -57,19 +80,18 @@ function RequestForm() {
   }
 
   const isGameChosen = BGG_SEARCH_AVAILABLE ? Boolean(bggId) : Boolean(gameTitle.trim());
-  const isQuantityValid = Number.isFinite(quantity) && quantity >= 1;
-  const isPartDescriptionValid = Boolean(partDescription.trim());
-  const isFormValid = isGameChosen && isPartDescriptionValid && isQuantityValid;
+  const isItemValid = (item: RequestItem) =>
+    Boolean(item.partDescription.trim()) && Number.isFinite(item.quantity) && item.quantity >= 1;
+  const areItemsValid = items.length > 0 && items.every(isItemValid);
+  const isFormValid = isGameChosen && areItemsValid;
 
   const disabledReason = !isGameChosen
     ? BGG_SEARCH_AVAILABLE
       ? "Select a game from the BGG search results to continue"
       : "Enter a game to continue"
-    : !isPartDescriptionValid
-      ? "Describe the part you need to continue"
-      : !isQuantityValid
-        ? "Enter a valid quantity (1 or more) to continue"
-        : "";
+    : !areItemsValid
+      ? "Describe each part and give it a valid quantity (1 or more) to continue"
+      : "";
 
   async function submit() {
     setError(null);
@@ -85,10 +107,12 @@ function RequestForm() {
         gameId,
         bggId,
         gameTitle: gameTitle.trim(),
-        partDescription,
-        quantity,
-        editionNote,
-        maxPrice: maxPrice || undefined,
+        items: items.map((item) => ({
+          partDescription: item.partDescription,
+          quantity: item.quantity,
+          editionNote: item.editionNote,
+          maxPrice: item.maxPrice || undefined,
+        })),
       }),
     });
 
@@ -188,45 +212,59 @@ function RequestForm() {
         )}
       </div>
 
-      <div className="field">
-        <label>What part do you need? (required, freeform, be specific)</label>
-        <textarea
-          rows={3}
-          value={partDescription}
-          onChange={(e) => setPartDescription(e.target.value)}
-          placeholder="e.g. Stealth Rohan card, or Shadow Troop meeple"
-        />
-      </div>
+      {items.map((item, index) => (
+        <div key={index} className="panel panel-dashed">
+          <div className="field">
+            <label>What part do you need? (required, freeform, be specific)</label>
+            <textarea
+              rows={3}
+              value={item.partDescription}
+              onChange={(e) => updateItem(index, { partDescription: e.target.value })}
+              placeholder="e.g. Stealth Rohan card, or Shadow Troop meeple"
+            />
+          </div>
 
-      <div className="field">
-        <label>Quantity (required)</label>
-        <input
-          type="number"
-          min={1}
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-        />
-      </div>
+          <div className="field">
+            <label>Quantity (required)</label>
+            <input
+              type="number"
+              min={1}
+              value={item.quantity}
+              onChange={(e) => updateItem(index, { quantity: Number(e.target.value) })}
+            />
+          </div>
 
-      <div className="field">
-        <label>Edition / printing note (optional)</label>
-        <input
-          type="text"
-          value={editionNote}
-          onChange={(e) => setEditionNote(e.target.value)}
-          placeholder="e.g. Kickstarter deluxe edition"
-        />
-      </div>
+          <div className="field">
+            <label>Edition / printing note (optional)</label>
+            <input
+              type="text"
+              value={item.editionNote}
+              onChange={(e) => updateItem(index, { editionNote: e.target.value })}
+              placeholder="e.g. Kickstarter deluxe edition"
+            />
+          </div>
 
-      <div className="field">
-        <label>Max you&apos;d pay (optional)</label>
-        <input
-          type="text"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-          placeholder="$10"
-        />
-      </div>
+          <div className="field">
+            <label>Max you&apos;d pay (optional)</label>
+            <input
+              type="text"
+              value={item.maxPrice}
+              onChange={(e) => updateItem(index, { maxPrice: e.target.value })}
+              placeholder="$10"
+            />
+          </div>
+
+          {items.length > 1 && (
+            <button className="btn-ghost" onClick={() => removeItem(index)}>
+              Remove this part
+            </button>
+          )}
+        </div>
+      ))}
+
+      <button className="btn-ghost" onClick={addItem}>
+        + Add another part for this game
+      </button>
 
       {error && <p className="error-text">{error}</p>}
 

@@ -10,14 +10,14 @@ datasource db {
 }
 
 model User {
-  id          String        @id @default(cuid())
+  id          String      @id @default(cuid())
   // Keycloak's OIDC "sub" claim — the app never stores a password itself,
   // Keycloak (and its federated Google/Facebook IdPs) owns that entirely.
-  keycloakSub String        @unique
-  email       String        @unique
-  isAdmin     Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  requests    PartRequest[]
+  keycloakSub String      @unique
+  email       String      @unique
+  isAdmin     Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  orders      PartOrder[]
 }
 
 // Singleton (fixed id) — admin-editable via /admin's About tab, rendered
@@ -30,12 +30,12 @@ model AboutPage {
 }
 
 model Game {
-  id        String        @id @default(cuid())
+  id        String      @id @default(cuid())
   bggId     String? // null when added via the manual fallback (BGG lookup failed/slow)
   title     String
-  inStock   Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  requests  PartRequest[]
+  inStock   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  orders    PartOrder[]
 
   @@index([inStock])
 }
@@ -52,25 +52,46 @@ enum RequestStatus {
   NOT_AVAILABLE
 }
 
-model PartRequest {
-  id              String          @id @default(cuid())
-  game            Game            @relation(fields: [gameId], references: [id])
-  gameId          String
-  requester       User            @relation(fields: [requesterId], references: [id])
-  requesterId     String
-  partDescription String
-  quantity        Int             @default(1)
-  editionNote     String? // freeform, optional — edition/language/printing flag (outside-voice finding #4)
-  maxPrice        Decimal?        @db.Decimal(10, 2)
-  criticalityTag  CriticalityTag  @default(UNSET)
-  status          RequestStatus   @default(PENDING)
-  price           Decimal?        @db.Decimal(10, 2) // set by admin when marking AVAILABLE
-  claimedAt       DateTime? // when marked AVAILABLE; the 5-day claim window starts here
-  createdAt       DateTime        @default(now())
+// One submission = one game + one requester + N line items (PartRequest
+// below). Introduced so a buyer can bundle everything they need for a
+// single game (e.g. a unique card + a stack of fungible meeples) into one
+// request instead of filing a separate one per part.
+model PartOrder {
+  id          String        @id @default(cuid())
+  game        Game          @relation(fields: [gameId], references: [id])
+  gameId      String
+  requester   User          @relation(fields: [requesterId], references: [id])
+  requesterId String
+  createdAt   DateTime      @default(now())
+  items       PartRequest[]
 
   // Datestamp-ordered per-game triage list depends on this index — no
   // automatic part-bucket grouping exists (office-hours R3-1); the admin
   // reads this ordering manually.
   @@index([gameId, createdAt])
+}
+
+// A single line item within a PartOrder. Price, criticality and status all
+// live here rather than on the order, since two items in the same order
+// (e.g. a card vs. a set of meeples) can have completely different prices
+// and availability.
+model PartRequest {
+  id                String         @id @default(cuid())
+  order             PartOrder      @relation(fields: [orderId], references: [id])
+  orderId           String
+  partDescription   String
+  quantityRequested Int            @default(1)
+  // Set by the admin when triaging; may be less than quantityRequested
+  // (e.g. buyer asked for 10 meeples, only 5 are on hand).
+  quantityAvailable Int?
+  editionNote       String? // freeform, optional — edition/language/printing flag (outside-voice finding #4)
+  maxPrice          Decimal?       @db.Decimal(10, 2)
+  criticalityTag    CriticalityTag @default(UNSET)
+  status            RequestStatus  @default(PENDING)
+  price             Decimal?       @db.Decimal(10, 2) // set by admin when marking AVAILABLE
+  claimedAt         DateTime? // when marked AVAILABLE; the 5-day claim window starts here
+  createdAt         DateTime       @default(now())
+
+  @@index([orderId])
   @@index([status])
 }

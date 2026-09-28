@@ -4,9 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { expireStaleClaims } from "@/lib/claims";
 
-// Admin-only: datestamp-ordered list per game (Recommended Approach). No
-// automatic grouping of freeform text into per-part buckets — the admin
-// reads this list and uses judgment (office-hours R3-1 resolution).
+// Admin-only: datestamp-ordered list of orders per game (Recommended
+// Approach), each with its bundled line items. No automatic grouping of
+// freeform text into per-part buckets — the admin reads this list and uses
+// judgment (office-hours R3-1 resolution).
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) {
@@ -15,13 +16,14 @@ export async function GET() {
 
   await expireStaleClaims();
 
-  const requests = await prisma.partRequest.findMany({
+  const orders = await prisma.partOrder.findMany({
     include: {
       game: { select: { id: true, title: true } },
       requester: { select: { email: true } },
+      items: { orderBy: { createdAt: "asc" } },
     },
     orderBy: [{ gameId: "asc" }, { createdAt: "asc" }],
   });
 
-  return NextResponse.json({ requests });
+  return NextResponse.json({ orders });
 }
