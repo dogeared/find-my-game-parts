@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.4.1-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.5.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -466,6 +466,15 @@ docker run --rm -v "$PWD":/app -w /app node:22-slim npx eslint .
 - Public `/about` page, content stored in the DB (`AboutPage` model) and
   edited from the "Admin" nav link's About tab (a plain markdown
   textarea + Preview) — no redeploy needed to change it.
+- Social link previews (Slack, etc.): `app/opengraph-image.tsx` generates
+  a 1200×630 image matching the site's look on the fly (Next.js's
+  `opengraph-image` file convention — wires up `og:image`/`twitter:image`
+  automatically). Uses the bundled Courier Prime font
+  (`assets/fonts/`, SIL OFL 1.1) rather than fetching one at request
+  time. `metadataBase` in `app/layout.tsx` is hardcoded to
+  `https://findmygame.parts` — update it if you deploy this under a
+  different domain, or the generated image URL in link previews will be
+  wrong.
 - Auth is wired as a generic OIDC client against Keycloak — the Keycloak
   realm/client and Google/Facebook federation are not created yet (see above).
   Self-registration and optional email verification (SMTP) are supported
