@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.3] - 2026-09-27
+
+### Changed
+- Nav "Sign in" button now reads "Sign in / Sign up", making
+  self-registration discoverable from the button itself.
+- Keycloak's "New user? Register" link is now styled as a full-width
+  secondary button underneath the Sign In button, matching the login
+  theme's existing button language, instead of a plain text link.
+
+[0.4.3]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.4.3
+
 ## [0.4.2] - 2026-09-27
 
 ### Fixed
