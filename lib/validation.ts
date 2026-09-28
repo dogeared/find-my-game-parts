@@ -7,6 +7,9 @@
 export const MAX_TEXT_LENGTH = 500;
 export const MAX_QUANTITY = 999;
 export const MAX_PRICE = 100_000;
+// Bounds a single order's line-item list (bundled part requests) — generous
+// for a real game's parts list, cheap to reject an abusive/malformed payload.
+export const MAX_ITEMS_PER_ORDER = 50;
 // The About page is freeform admin-written markdown, not a short field —
 // 500 chars wouldn't fit a single paragraph. 20,000 is generous (a few
 // thousand words) while still bounding worst-case size.

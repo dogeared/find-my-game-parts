@@ -33,7 +33,7 @@ describe("expireStaleClaims", () => {
     expect(update).toHaveBeenCalledTimes(2);
     expect(update).toHaveBeenCalledWith({
       where: { id: "req-1" },
-      data: { status: "PENDING", claimedAt: null, price: null },
+      data: { status: "PENDING", claimedAt: null, price: null, quantityAvailable: null },
     });
   });
 
