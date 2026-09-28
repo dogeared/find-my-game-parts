@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-09-28
+
+### Added
+- "Send notification" button on every order in admin triage — lets the
+  admin notify the buyer about what's decided so far at any point, on
+  orders of any size, without waiting for every item to be resolved.
+- Notifications now send automatically once every line item in an order
+  has been decided (all available or not-available), instead of after
+  every single item change — a multi-item order no longer spams the buyer
+  with one email per decision.
+
+### Changed
+- Extracted the order-notification logic into `lib/notifications.ts`,
+  shared by both the automatic full-triage send and the new manual button.
+
 ## [1.2.0] - 2026-09-28
 
 ### Changed
@@ -70,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.3.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.2.0
 [1.1.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.0.0

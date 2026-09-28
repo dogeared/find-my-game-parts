@@ -147,6 +147,10 @@ function RequestsTab() {
   // adjust both before submitting a single "mark available" action instead
   // of two sequential window.prompt() calls.
   const [drafts, setDrafts] = useState<Record<string, AvailabilityDraft>>({});
+  // Per-order feedback for both the manual "Send notification" button and
+  // the automatic send that fires once an order's last item is decided —
+  // persists until overwritten by the next notify action on that order.
+  const [notifyFeedback, setNotifyFeedback] = useState<Record<string, string>>({});
 
   function draftFor(item: AdminItem): AvailabilityDraft {
     return drafts[item.id] ?? { price: "", quantityAvailable: item.quantityRequested };
@@ -169,7 +173,7 @@ function RequestsTab() {
     loadOrders();
   }, []);
 
-  async function patchItem(id: string, body: Record<string, unknown>) {
+  async function patchItem(id: string, body: Record<string, unknown>, orderId?: string) {
     const res = await fetch(`/api/admin/requests/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -180,28 +184,40 @@ function RequestsTab() {
       if (data.otherPendingForGame?.length > 0) {
         setNudge({ approvedId: id, others: data.otherPendingForGame });
       }
+      if (orderId && data.orderNotified) {
+        setNotifyFeedback((prev) => ({ ...prev, [orderId]: "Buyer notified — every item is decided." }));
+      }
       loadOrders();
     }
   }
 
-  async function markNotAvailable(id: string) {
-    await patchItem(id, { status: "NOT_AVAILABLE" });
+  async function markNotAvailable(id: string, orderId?: string) {
+    await patchItem(id, { status: "NOT_AVAILABLE" }, orderId);
     setNudge((prev) =>
       prev ? { ...prev, others: prev.others.filter((o) => o.id !== id) } : prev
     );
   }
 
-  function markAvailable(item: AdminItem) {
+  function markAvailable(item: AdminItem, orderId: string) {
     const draft = draftFor(item);
-    patchItem(item.id, {
-      status: "AVAILABLE",
-      price: draft.price,
-      quantityAvailable: draft.quantityAvailable,
-    });
+    patchItem(
+      item.id,
+      { status: "AVAILABLE", price: draft.price, quantityAvailable: draft.quantityAvailable },
+      orderId
+    );
     setDrafts((prev) => {
       const { [item.id]: _removed, ...rest } = prev;
       return rest;
     });
+  }
+
+  async function sendNotification(orderId: string) {
+    const res = await fetch(`/api/admin/orders/${orderId}/notify`, { method: "POST" });
+    const data = res.ok ? await res.json() : { sent: false };
+    setNotifyFeedback((prev) => ({
+      ...prev,
+      [orderId]: data.sent ? "Notification sent." : "Notification failed to send.",
+    }));
   }
 
   // Grouped by game, in the order the API already returns (gameId asc, then
@@ -246,7 +262,11 @@ function RequestsTab() {
           {gameOrders.map((order) => (
             <div key={order.id} className="game-row game-row--stacked">
               <div>
-                {order.requester.email} — {new Date(order.createdAt).toLocaleString()}
+                {order.requester.email} — {new Date(order.createdAt).toLocaleString()}{" "}
+                <button className="btn-ghost" onClick={() => sendNotification(order.id)}>
+                  Send notification
+                </button>
+                {notifyFeedback[order.id] && <span> — {notifyFeedback[order.id]}</span>}
               </div>
               {order.items.map((item) => (
                 <div key={item.id} className="panel panel-dashed">
@@ -306,12 +326,12 @@ function RequestsTab() {
                       <div>
                         <button
                           className="btn-ghost"
-                          onClick={() => markAvailable(item)}
+                          onClick={() => markAvailable(item, order.id)}
                           disabled={!draftFor(item).price.trim()}
                         >
                           Mark available
                         </button>
-                        <button className="btn-ghost" onClick={() => markNotAvailable(item.id)}>
+                        <button className="btn-ghost" onClick={() => markNotAvailable(item.id, order.id)}>
                           Mark not available
                         </button>
                       </div>
