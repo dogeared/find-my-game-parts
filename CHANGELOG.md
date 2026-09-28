@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Admins triage each line item independently — mark it available or not,
   and adjust the fulfilled quantity down from what was requested (e.g. 5 of
   10 meeples in stock).
+- Global footer with a link to the GitHub repo, the current version, and a
+  "made with ❤️ by dogeared" tagline.
 
 ### Changed
 - **Breaking data model change**: `PartRequest` is now a line item under a

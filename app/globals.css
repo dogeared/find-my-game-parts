@@ -302,3 +302,17 @@ a {
   border: 1px solid var(--border);
   padding: 2px 4px;
 }
+
+.site-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 24px 12px;
+  margin-top: 24px;
+  border-top: 3px solid var(--border);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}

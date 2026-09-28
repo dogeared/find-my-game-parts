@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AccessibilityToggle } from "@/components/AccessibilityToggle";
+import { Footer } from "@/components/Footer";
 import { NavAuth } from "@/components/NavAuth";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 import { ThemePicker } from "@/components/ThemePicker";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
           {children}
+          <Footer />
         </SessionProviderWrapper>
       </body>
     </html>
