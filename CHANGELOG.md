@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-09-28
+
+### Added
+- Public `/about` page — content lives in a new `AboutPage` DB row, not
+  a file, so an admin can update it without a redeploy.
+- Admin page is now tabbed: **Inventory** (unchanged) and **About**, a
+  markdown textarea with a **Preview** button that renders through the
+  same component the public page uses.
+
+### Changed
+- Nav "Inventory" button is now "Admin" (`/admin`, was `/admin/games`),
+  reflecting that it now hosts more than just inventory management.
+
+[0.5.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v0.5.0
+
 ## [0.4.3] - 2026-09-27
 
 ### Changed
