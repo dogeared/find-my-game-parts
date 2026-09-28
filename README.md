@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.3.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.3.1-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -239,6 +239,66 @@ clicked the actual emailed link cold (no session), and compared the
 resulting page with and without `baseUrl` set — no link at all without
 it, "« Back to Application" with it.
 
+## Two-way claim email
+
+Optional — lets a buyer reply directly to the "your part is available"
+notification (`lib/email.ts`) to arrange payment/shipping, with the reply
+landing in a real inbox, while outgoing mail still shows a dedicated
+`claim@findmygame.parts` sender rather than a personal address. This is
+pure DNS + email-provider configuration — no app code beyond the
+`EMAIL_FROM` value below, since Mailjet needs no per-address setup once a
+domain is verified (any address at a verified domain works immediately).
+
+### 1. Cloudflare Email Routing (inbound: claim@ → your real inbox)
+
+Requires `findmygame.parts`'s DNS to be on Cloudflare (it already is, for
+the Keycloak Cloudflare Tunnel — see "Production deployment" below).
+
+1. Cloudflare dashboard → the `findmygame.parts` zone → **Email** → **Email Routing**.
+2. Enable Email Routing if it isn't already (Cloudflare adds the necessary
+   MX/TXT records automatically — don't add them by hand, they conflict).
+3. **Routing rules** → **Create address** → `claim@findmygame.parts` →
+   destination: your real personal inbox. Verify that destination address
+   if Cloudflare prompts for it (one-time, via a confirmation email).
+
+Mail sent to `claim@findmygame.parts` now forwards straight to your inbox.
+
+### 2. "Send as" alias in your email provider (outbound: reply → looks like claim@)
+
+Without this step, replying to a forwarded message sends from your real
+address, not `claim@findmygame.parts`. Every major provider supports
+sending as a verified alias — exact menu names vary, but the shape is the
+same everywhere (Gmail: Settings → **Accounts and Import** → **Send mail
+as**; Google Workspace, Fastmail, Zoho, and Outlook all have an equivalent
+under account/identity settings):
+
+1. Add `claim@findmygame.parts` as a "send as" / custom "from" address.
+2. Choose email-based verification (not SMTP credentials — Mailjet doesn't
+   provide a personal-inbox SMTP login, and you don't need one here). The
+   provider sends a confirmation code/link to `claim@findmygame.parts`,
+   which arrives via the Cloudflare forwarding set up in step 1.
+3. Confirm it. You can now compose or reply *as* `claim@findmygame.parts`
+   from your normal inbox — the buyer never sees your personal address.
+
+### 3. App config
+
+`lib/email.ts` reads the sender from `EMAIL_FROM`:
+
+```bash
+EMAIL_FROM=claim@findmygame.parts
+```
+
+Set it in your local `.env` for dev, and as the `EMAIL_FROM` Render secret
+(`sync: false` in `render.yaml` — set once in the Render dashboard, see
+"Set the `sync: false` environment variables" below) for production. If
+unset, `lib/email.ts` falls back to `claim@findmygame.parts` by default.
+This is a single global value — every email this app sends currently goes
+through one code path (`sendOrderResponseEmail`), so one address covers
+it. A second, distinct email type wanting a different sender (e.g. staying
+on `noreply@` for something unrelated to claims) would need a small code
+change to pass `from` per call instead of reading one env var; not needed
+today since there's only the one flow.
+
 ## Production deployment
 
 The app + its own Postgres deploy to Render via `render.yaml` (this
@@ -338,7 +398,7 @@ service's **Environment** tab in the Render dashboard:
 | `NEXTAUTH_URL` | This service's own public URL (e.g. `https://findmygameparts.com`) |
 | `KEYCLOAK_ISSUER` | `https://auth.findmygame.parts/realms/find-my-game-parts` |
 | `KEYCLOAK_PUBLIC_URL` | `https://auth.findmygame.parts` — **the same host as `KEYCLOAK_ISSUER`'s base**; unlike local dev's container-vs-host split, there's no internal network here at all, since Keycloak isn't on Render |
-| `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `EMAIL_FROM` | Your Mailjet credentials — same provider Keycloak sends through for this domain |
+| `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `EMAIL_FROM` | Your Mailjet credentials — same provider Keycloak sends through for this domain. `EMAIL_FROM=claim@findmygame.parts` — see "Two-way claim email" above for the reply-forwarding setup |
 | `BGG_API_TOKEN` | Once BGG approves your application — also needs wiring into `lib/bgg.ts` (TODOS.md tracks this) |
 
 ### 6. Bootstrap the realm
