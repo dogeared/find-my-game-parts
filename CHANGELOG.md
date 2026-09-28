@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   admin triage and My Requests. Only shown for games with a real BGG
   match.
 
+### Changed
+- Links across the app no longer show an underline.
+
 ## [1.4.0] - 2026-09-28
 
 ### Added
