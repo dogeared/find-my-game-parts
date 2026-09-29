@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Browsers ignore HSTS over plain HTTP, so this is inert locally.
+          // includeSubDomains is safe because every subdomain (www, auth)
+          // serves HTTPS; any future subdomain must too. No `preload` yet —
+          // getting off the browsers' preload list takes months.
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains",
+          },
         ],
       },
     ];

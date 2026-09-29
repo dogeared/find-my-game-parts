@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-09-29
+
+### Added
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains` on
+  every response, so returning browsers never make a plain-HTTP request
+  to the site (securityheaders.com: A → A+). No `preload` yet.
+
 ## [1.8.0] - 2026-09-29
 
 ### Added
@@ -255,6 +262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.8.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.8.1
 [1.8.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.8.0
 [1.7.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.1
 [1.7.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.0
