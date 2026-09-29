@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-09-29
+
+### Changed
+- Moved the "About" nav link to the end of the nav bar, after the sign
+  in/out button (and admin links, when signed in as an admin).
+
 ## [1.6.0] - 2026-09-29
 
 ### Added
@@ -201,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.6.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.1
 [1.6.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.0
 [1.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.1
 [1.5.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.0

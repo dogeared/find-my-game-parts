@@ -43,10 +43,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/" className="btn-ghost">
                 Home
               </Link>
+              <NavAuth />
               <Link href="/about" className="btn-ghost">
                 About
               </Link>
-              <NavAuth />
             </nav>
             <div className="topbar-utility">
               <ThemePicker />
