@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-09-29
+
+### Changed
+- Re-added the Snyk job to CI (`snyk test` + `snyk code test`), removed
+  back in 0.4.1 after it hung on a quota-exhausted account. It now runs
+  against the `micah.silvermansnyk.io` org explicitly (the token has no
+  default org), and `tag-release` waits on it again. The known
+  DOM-XSS false positive in `MyRequestsPageClient.tsx` is ignored in the
+  Snyk web UI, since a `.snyk` file can't ignore Snyk Code findings.
+  Per-step (5 min) and job (15 min) timeouts are unchanged.
+
 ## [1.7.0] - 2026-09-29
 
 ### Fixed
@@ -230,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.7.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.1
 [1.7.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.0
 [1.6.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.1
 [1.6.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.0
