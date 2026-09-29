@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.6.2] - 2026-09-29
+## [1.7.0] - 2026-09-29
 
 ### Fixed
 - `/request`, `/my-requests`, and `/admin` could hang indefinitely on the
@@ -230,7 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
-[1.6.2]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.2
+[1.7.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.0
 [1.6.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.1
 [1.6.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.0
 [1.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.1
