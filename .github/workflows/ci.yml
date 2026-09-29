@@ -30,17 +30,53 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  # Snyk job temporarily removed — snyk code test hung indefinitely in CI
-  # more than once (quota exhaustion, then an org-level Snyk Code
-  # enablement gap), and even with per-step timeouts added as a backstop,
-  # the timing is still unreliable enough to be worth pulling out of the
-  # required checks entirely until it's sorted out. It's still enforced
-  # locally via .husky/pre-push. Re-add once confirmed stable.
+  security:
+    name: Snyk
+    runs-on: ubuntu-latest
+    # Backstop for the whole job — hit live: `snyk test` hung indefinitely
+    # in this exact job (quota-exhausted service account token seemingly
+    # handled differently than an interactive session, which just prints
+    # a warning and exits normally) and had to be cancelled by hand.
+    # Every observed successful run finishes in well under a minute, but
+    # a first run right after enabling Snyk Code on a new org can take
+    # longer (backend indexing) — sized to comfortably fit both 5-minute
+    # per-step timeouts below plus checkout/setup/npm ci overhead.
+    # Re-added after upgrading to a paid Snyk account (the quota-exhaustion
+    # root cause) and rotating SNYK_TOKEN to that account's token.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/placeholder
+
+      - uses: snyk/actions/setup@master
+
+      # --org explicitly: the token has no default org, and Snyk Code
+      # ignores (set in the web UI — a .snyk file can't ignore Code
+      # findings) live on the find-my-game-parts project in this org.
+      - run: snyk test --org=micah.silvermansnyk.io
+        timeout-minutes: 5
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - run: snyk code test --org=micah.silvermansnyk.io
+        timeout-minutes: 5
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   tag-release:
     name: Tag release
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [test, security]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: write

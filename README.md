@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.7.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.7.1-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -443,11 +443,22 @@ on merge to `main` automatically once the blueprint is connected
 (step 3), so this CI is about catching regressions before merge, not
 triggering the deploy itself.
 
-Snyk (`snyk test`/`snyk code test`) is temporarily removed from CI —
-`snyk code test` hung indefinitely more than once, and even with
-per-step timeouts as a backstop the timing was still unreliable enough
-to pull from required checks. It's still enforced locally via the
-`.husky/pre-push` hook; will be re-added to CI once confirmed stable.
+A separate **Snyk** job runs `snyk test` (dependencies) and
+`snyk code test` (static analysis) against the `micah.silvermansnyk.io`
+org, using the `SNYK_TOKEN` repo secret. `tag-release` waits on it, so a
+release tag is only created when both scans pass. The same scans also
+run locally via the `.husky/pre-push` hook.
+
+- **Ignores live in the Snyk org, not in the repo.** A `.snyk` policy file
+  can't ignore Snyk Code findings, so false positives have to be marked
+  ignored in the Snyk web UI, on the `find-my-game-parts` project in that
+  org. The CLI and CI then honor them automatically.
+- **Timeouts:** each scan step has a 5-minute timeout, and the job as a
+  whole has 15 minutes. Snyk was pulled from CI once before after hanging
+  indefinitely on a quota-exhausted account. A normal run takes about 25
+  seconds, but the first scan after adding an ignore took over 5 minutes
+  locally. If a run times out right after you change an ignore, re-run
+  it before digging in.
 
 ## Tests, lint, typecheck
 
