@@ -14,6 +14,9 @@ export const MAX_ITEMS_PER_ORDER = 50;
 // 500 chars wouldn't fit a single paragraph. 20,000 is generous (a few
 // thousand words) while still bounding worst-case size.
 export const MAX_ABOUT_LENGTH = 20_000;
+// A signature-style footer, not an essay — bounds it well short of
+// MAX_ABOUT_LENGTH while still allowing a few lines of contact info/links.
+export const MAX_EMAIL_FOOTER_LENGTH = 2_000;
 
 export function isValidText(value: unknown, maxLength = MAX_TEXT_LENGTH): value is string {
   return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength;

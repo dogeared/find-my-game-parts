@@ -29,6 +29,16 @@ model AboutPage {
   updatedAt DateTime @updatedAt
 }
 
+// Singleton (fixed id) — admin-editable via /admin's Email Footer tab.
+// Plain text (not markdown) as a first pass — appended to the end of
+// every outgoing notification email (lib/email.ts). Not public-facing;
+// unlike AboutPage, both API methods are admin-only.
+model EmailFooter {
+  id        String   @id @default("footer")
+  text      String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 model Game {
   id        String      @id @default(cuid())
   bggId     String? // null when added via the manual fallback (BGG lookup failed/slow)

@@ -10,7 +10,18 @@
 // order's full current picture (not just what just changed).
 
 import { Client, type SendEmailV3_1 } from "node-mailjet";
+import { prisma } from "@/lib/prisma";
 import { formatExtendedPrice } from "@/lib/pricing";
+
+const EMAIL_FOOTER_ID = "footer";
+
+// Lives here (not in the caller) so every email this function ever sends
+// gets the footer automatically — a future email type added elsewhere
+// can't forget to append it.
+async function getFooterText(): Promise<string> {
+  const footer = await prisma.emailFooter.findUnique({ where: { id: EMAIL_FOOTER_ID } });
+  return footer?.text.trim() ?? "";
+}
 
 // Same provider Keycloak already sends through for this domain (SMTP,
 // keycloak/setup-realm.sh) — consolidating here avoids a second
@@ -69,6 +80,8 @@ export async function sendOrderResponseEmail(params: {
     return `- ${item.partDescription} (qty ${item.quantityRequested}): available${qtyNote} — ${price}`;
   });
 
+  const footerText = await getFooterText();
+
   const body = [
     `Here's where things stand on your request for ${params.gameTitle}:`,
     "",
@@ -77,6 +90,7 @@ export async function sendOrderResponseEmail(params: {
     anyAvailable
       ? "Reply to this email to arrange payment and shipping for the available part(s). Each claim holds for 5 days from now."
       : "I'll keep the rest of your request on file in case that changes.",
+    ...(footerText ? ["", footerText] : []),
   ].join("\n");
 
   try {
