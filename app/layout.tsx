@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AccessibilityToggle } from "@/components/AccessibilityToggle";
+import { CloudflareAnalytics } from "@/components/CloudflareAnalytics";
 import { Footer } from "@/components/Footer";
 import { NavAuth } from "@/components/NavAuth";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
           <Footer />
         </SessionProviderWrapper>
+        <CloudflareAnalytics />
       </body>
     </html>
   );

@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-09-29
+
+### Added
+- Cloudflare Web Analytics for tracking site visits. The root layout
+  renders the beacon with the per-request CSP nonce (Cloudflare's
+  edge auto-injection would be blocked by the strict CSP), only when
+  `CF_WEB_ANALYTICS_TOKEN` is set to a valid token — so it's off locally
+  and in CI. `connect-src` gains `https://cloudflareinsights.com` only in
+  that case.
+
+### Changed
+- CSP construction moved from `proxy.ts` into `lib/csp.ts` so it can be
+  unit-tested.
+
 ## [1.7.1] - 2026-09-29
 
 ### Changed
@@ -241,6 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.8.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.8.0
 [1.7.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.1
 [1.7.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.0
 [1.6.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.1

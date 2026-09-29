@@ -1,6 +1,6 @@
 # Find My Game Parts
 
-[![version](https://img.shields.io/badge/version-1.7.1-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.8.0-blue)](CHANGELOG.md)
 [![CI](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml/badge.svg)](https://github.com/dogeared/find-my-game-parts/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -400,6 +400,7 @@ service's **Environment** tab in the Render dashboard:
 | `KEYCLOAK_PUBLIC_URL` | `https://auth.findmygame.parts` — **the same host as `KEYCLOAK_ISSUER`'s base**; unlike local dev's container-vs-host split, there's no internal network here at all, since Keycloak isn't on Render |
 | `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `EMAIL_FROM` | Your Mailjet credentials — same provider Keycloak sends through for this domain. `EMAIL_FROM=claim@findmygame.parts` — see "Two-way claim email" above for the reply-forwarding setup |
 | `BGG_API_TOKEN` | Your approved BGG application token (register at boardgamegeek.com/using_the_xml_api) |
+| `CF_WEB_ANALYTICS_TOKEN` | Optional. Cloudflare Web Analytics beacon token — see "Analytics" below. Analytics is off when unset |
 
 ### 6. Bootstrap the realm
 
@@ -459,6 +460,25 @@ run locally via the `.husky/pre-push` hook.
   seconds, but the first scan after adding an ignore took over 5 minutes
   locally. If a run times out right after you change an ignore, re-run
   it before digging in.
+
+## Analytics
+
+Visits are tracked with [Cloudflare Web Analytics](https://developers.cloudflare.com/web-analytics/):
+free, cookieless (no consent banner needed), and it follows client-side
+navigations on its own.
+
+1. Cloudflare dashboard → **Analytics & Logs → Web Analytics → Add a site**,
+   hostname `findmygame.parts`.
+2. If it offers **automatic setup** (the domain is proxied through
+   Cloudflare), turn it **off** and use the **JS snippet** option instead.
+   Edge-injected beacons carry no CSP nonce, so the app's strict
+   `script-src` would block them — the app renders its own nonce'd beacon.
+3. Copy the `token` value from the snippet and set it as
+   `CF_WEB_ANALYTICS_TOKEN` on the Render app service.
+
+With the token unset (the default locally), no beacon is rendered and the
+CSP's `connect-src` stays `'self'` only; with it set, `connect-src` also
+allows `https://cloudflareinsights.com`, where the beacon reports.
 
 ## Tests, lint, typecheck
 

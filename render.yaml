@@ -73,3 +73,5 @@ services:
         value: https://boardgamegeek.com/xmlapi2
       - key: BGG_API_TOKEN
         sync: false
+      - key: CF_WEB_ANALYTICS_TOKEN
+        sync: false

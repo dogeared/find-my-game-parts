@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { RateLimiterMemory } from "rate-limiter-flexible";
+import { buildCsp, isValidCfAnalyticsToken } from "./lib/csp";
 
 // Application-layer rate limiting, not real DDoS protection — a true
 // volumetric/network-layer attack has to be stopped upstream (Render's own
@@ -76,17 +77,10 @@ export async function proxy(request: NextRequest) {
   // itself states it "will never use eval() in production", so this only
   // loosens script-src in dev, never in the actual deployed app.
   const isDev = process.env.NODE_ENV !== "production";
-  const csp = [
-    `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    `style-src 'self'`,
-    `img-src 'self' data:`,
-    `font-src 'self'`,
-    `connect-src 'self'`,
-    `frame-ancestors 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-  ].join("; ");
+  const csp = buildCsp(nonce, {
+    isDev,
+    analytics: isValidCfAnalyticsToken(process.env.CF_WEB_ANALYTICS_TOKEN),
+  });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
