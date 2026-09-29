@@ -9,12 +9,12 @@ const PROFILE_URL = "https://github.com/dogeared";
 export function Footer() {
   return (
     <footer className="site-footer">
-      <a href={REPO_URL} className="btn-ghost">
+      <a href={REPO_URL} className="btn-ghost" target="_blank" rel="noopener noreferrer">
         GitHub
       </a>
       <span>v{packageJson.version}</span>
       <span>made with ❤️ by</span>
-      <a href={PROFILE_URL} className="btn-ghost">
+      <a href={PROFILE_URL} className="btn-ghost" target="_blank" rel="noopener noreferrer">
         dogeared
       </a>
     </footer>
