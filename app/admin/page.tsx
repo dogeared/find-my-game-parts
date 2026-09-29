@@ -8,7 +8,7 @@ import { bggGameUrl, isValidBggId } from "@/lib/bgg";
 import { formatExtendedPrice } from "@/lib/pricing";
 
 type Game = { id: string; title: string; bggId: string | null; inStock: boolean };
-type Tab = "inventory" | "requests" | "about";
+type Tab = "inventory" | "requests" | "about" | "email-footer";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -35,9 +35,23 @@ export default function AdminPage() {
         <button className={`tab ${tab === "about" ? "tab-active" : ""}`} onClick={() => setTab("about")}>
           About
         </button>
+        <button
+          className={`tab ${tab === "email-footer" ? "tab-active" : ""}`}
+          onClick={() => setTab("email-footer")}
+        >
+          Email Footer
+        </button>
       </div>
 
-      {tab === "inventory" ? <InventoryTab /> : tab === "requests" ? <RequestsTab /> : <AboutTab />}
+      {tab === "inventory" ? (
+        <InventoryTab />
+      ) : tab === "requests" ? (
+        <RequestsTab />
+      ) : tab === "about" ? (
+        <AboutTab />
+      ) : (
+        <EmailFooterTab />
+      )}
     </main>
   );
 }
@@ -415,6 +429,55 @@ function AboutTab() {
           Save
         </button>
       )}
+      {status && <p className={status === "Saved." ? undefined : "error-text"}>{status}</p>}
+    </>
+  );
+}
+
+function EmailFooterTab() {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/admin/email-footer");
+      if (res.ok) {
+        const data = await res.json();
+        setText(data.text ?? "");
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  async function save() {
+    setStatus(null);
+    const res = await fetch("/api/admin/email-footer", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    setStatus(res.ok ? "Saved." : "Save failed — check the content and try again.");
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <>
+      <h2>Edit the email footer</h2>
+      <p>
+        Appended to the end of every notification email sent to buyers. Plain text (not markdown)
+        for now.
+      </p>
+
+      <div className="field">
+        <label>Footer text</label>
+        <textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} />
+      </div>
+
+      <button className="btn" onClick={save}>
+        Save
+      </button>
       {status && <p className={status === "Saved." ? undefined : "error-text"}>{status}</p>}
     </>
   );

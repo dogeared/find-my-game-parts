@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const request = vi.fn();
+const findUniqueFooter = vi.fn();
 
 vi.mock("node-mailjet", () => ({
   Client: class {
@@ -8,6 +9,10 @@ vi.mock("node-mailjet", () => ({
       return { request: (...args: unknown[]) => request(...args) };
     }
   },
+}));
+
+vi.mock("./prisma", () => ({
+  prisma: { emailFooter: { findUnique: (...args: unknown[]) => findUniqueFooter(...args) } },
 }));
 
 process.env.MJ_APIKEY_PUBLIC = "test-public-key";
@@ -22,6 +27,8 @@ describe("sendOrderResponseEmail", () => {
   beforeEach(() => {
     request.mockReset();
     request.mockResolvedValue({});
+    findUniqueFooter.mockReset();
+    findUniqueFooter.mockResolvedValue(null);
   });
 
   it("sends a single-line summary when every item is available", async () => {
@@ -105,6 +112,35 @@ describe("sendOrderResponseEmail", () => {
 
     const message = messageFrom(0);
     expect(message.TextPart).toContain("Shadow Warrior meeple (qty 10): still checking");
+  });
+
+  it("appends the configured footer to every email", async () => {
+    findUniqueFooter.mockResolvedValue({ text: "Find My Game Parts — findmygame.parts" });
+
+    await sendOrderResponseEmail({
+      to: "buyer@example.com",
+      gameTitle: "Fate of the Fellowship",
+      items: [
+        { partDescription: "Rohan Stealth card", quantityRequested: 1, status: "AVAILABLE", price: "5.00" },
+      ],
+    });
+
+    const message = messageFrom(0);
+    expect(message.TextPart).toContain("Find My Game Parts — findmygame.parts");
+    expect(message.TextPart.endsWith("Find My Game Parts — findmygame.parts")).toBe(true);
+  });
+
+  it("adds no extra blank lines when the footer is unset", async () => {
+    await sendOrderResponseEmail({
+      to: "buyer@example.com",
+      gameTitle: "Fate of the Fellowship",
+      items: [
+        { partDescription: "Rohan Stealth card", quantityRequested: 1, status: "AVAILABLE", price: "5.00" },
+      ],
+    });
+
+    const message = messageFrom(0);
+    expect(message.TextPart.endsWith("Each claim holds for 5 days from now.")).toBe(true);
   });
 
   it("returns sent:false and logs without calling Mailjet when the send request rejects", async () => {
