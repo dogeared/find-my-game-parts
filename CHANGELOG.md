@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-09-29
+
+### Fixed
+- `/request`, `/my-requests`, and `/admin` could hang indefinitely on the
+  Suspense/loading fallback with no visible error — reported live via a
+  plain markdown link (`[text](/request)`) on the About page. Root cause:
+  as `"use client"` pages with no route segment config, all three were
+  statically prerendered at build time with no CSP nonce baked in, which
+  never matches the fresh per-request nonce `proxy.ts` generates; any real
+  full-page navigation (not a `next/link` transition, which never re-runs
+  this) got every script blocked by CSP with zero visible error. Fixed by
+  splitting each into a thin Server Component `page.tsx` (which can
+  actually set `export const dynamic = "force-dynamic"` — a client
+  `page.tsx` silently ignores it) plus a `*PageClient.tsx` holding the
+  actual UI. Verified against a real production build: build output now
+  shows all three as dynamic rather than static, and the CSP nonce
+  correctly matches between header and script tags (confirmed mismatched
+  before the fix, matching before/after).
+
+### Changed
+- The footer's GitHub and "dogeared" links now open in a new tab
+  (`target="_blank"`, with `rel="noopener noreferrer"`).
+
 ## [1.6.1] - 2026-09-29
 
 ### Changed
@@ -207,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added a proper border and margin to the About tab's preview box,
   which was missing both.
 
+[1.7.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.7.0
 [1.6.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.1
 [1.6.0]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.6.0
 [1.5.1]: https://github.com/dogeared/find-my-game-parts/releases/tag/v1.5.1
