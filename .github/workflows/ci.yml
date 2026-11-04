@@ -101,10 +101,14 @@ jobs:
 
   # Publishes the NAS's copy of this app. The Synology pulls `:latest` on a timer;
   # `:sha-<short>` and the version tag are there for pinning a rollback.
+  #
+  # Deliberately needs only `test`: the Snyk job still fails the CI run for humans, but
+  # a newly-disclosed advisory in a transitive dependency must not freeze deploys of
+  # unrelated fixes (that is exactly what happened the day this was added).
   publish:
     name: Publish image
     runs-on: ubuntu-latest
-    needs: [test, security]
+    needs: [test]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
