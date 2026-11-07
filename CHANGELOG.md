@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-11-06
+
+### Security
+- Next.js 16.3.6 → 16.4.5 (and `eslint-config-next` to match), closing the
+  RCE-in-image-optimization, RCE-in-`use cache`, SSRF, cache-poisoning and
+  denial-of-service advisories Snyk flagged. The bundled `sharp` moves to
+  0.35.5.
+- Prisma 7.10.0 → 7.10.1 across `prisma`, `@prisma/client` and
+  `@prisma/adapter-pg`; this pulls in mysql2 3.24.4, closing the
+  decompression-bomb advisory in its compressed-value handler.
+- Override `follow-redirects` to 1.16.2 and `source-map-js` to 1.2.2 for the
+  remaining high-severity transitive advisories.
+
 ## [1.8.1] - 2026-09-29
 
 ### Added
