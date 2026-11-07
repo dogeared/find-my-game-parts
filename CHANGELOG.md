@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   decompression-bomb advisory in its compressed-value handler.
 - Override `follow-redirects` to 1.16.2 and `source-map-js` to 1.2.2 for the
   remaining high-severity transitive advisories.
+- Harden the BGG link rendered on My Requests: the href is built inline from
+  `Number(bggId)` rather than a client-supplied string, and `bggGameUrl` does
+  the same, so no state value reaches the attribute untyped. Clears Snyk Code's
+  DOM-XSS finding.
 
 ## [1.8.1] - 2026-09-29
 

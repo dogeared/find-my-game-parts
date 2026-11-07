@@ -19,10 +19,11 @@ export function isValidBggId(value: unknown): value is string {
 
 // Shared everywhere a game's BGG id is shown as a link (admin triage,
 // buyer's My Requests) so the URL shape only needs to be right once.
-// Callers must guard with isValidBggId first; encodeURIComponent here is
-// defense in depth on top of that, not a substitute for it.
+// Callers must guard with isValidBggId first. The numeric conversion is
+// deliberate: it collapses the client-supplied string to a number before it
+// reaches the href, so no tainted text can ever be interpreted as markup.
 export function bggGameUrl(bggId: string): string {
-  return `https://boardgamegeek.com/boardgame/${encodeURIComponent(bggId)}`;
+  return `https://boardgamegeek.com/boardgame/${Number(bggId)}`;
 }
 
 const BGG_API_BASE = process.env.BGG_API_BASE ?? "https://boardgamegeek.com/xmlapi2";

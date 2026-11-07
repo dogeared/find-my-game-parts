@@ -2,7 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { bggGameUrl, isValidBggId } from "@/lib/bgg";
+import { isValidBggId } from "@/lib/bgg";
 import { CLAIM_WINDOW_MS } from "@/lib/constants";
 import { formatExtendedPrice } from "@/lib/pricing";
 
@@ -81,7 +81,11 @@ export function MyRequestsPageClient() {
             {isValidBggId(order.game.bggId) && (
               <>
                 {" "}
-                <a href={bggGameUrl(order.game.bggId)} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={`https://boardgamegeek.com/boardgame/${Number(order.game.bggId)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   (BGG #{order.game.bggId})
                 </a>
               </>
