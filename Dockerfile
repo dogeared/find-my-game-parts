@@ -54,4 +54,9 @@ COPY --from=build /app/public ./public
 # bug as the earlier missing prisma.config.ts copy.
 COPY --from=build /app/assets ./assets
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+# Apply pending Prisma migrations, then serve — the way Flyway runs inside the
+# Spring apps at startup. Against an up-to-date database it's a no-op. The
+# prisma CLI stays out of the image (see prod-deps), so npx fetches the pinned
+# version, exactly as Render's preDeployCommand and the NAS's former one-shot
+# `migrate` service did. A failed migration stops the container from starting.
+CMD ["sh", "-c", "npx --yes prisma@7.10.1 migrate deploy && exec npm run start"]
