@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.1] - 2026-11-10
+
+### Changed
+- The production image applies pending Prisma migrations itself on start
+  (`npx --yes prisma@7.10.1 migrate deploy && next start`), as Flyway does in
+  the Spring apps. The NAS compose project no longer has a one-shot `migrate`
+  service, so no exited `fmgp-migrate` container lingers after each deploy.
+
 ## [1.9.0] - 2026-11-06
 
 ### Security
